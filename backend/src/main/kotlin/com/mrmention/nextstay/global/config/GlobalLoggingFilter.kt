@@ -19,7 +19,7 @@ class GlobalLoggingFilter : OncePerRequestFilter() {
         val uri = request.requestURI
         
         // 정적 리소스, Swagger, 헬스체크 관련 로그 제외 (노이즈 제거)
-        if (uri.startsWith("/swagger-ui") || uri.startsWith("/v3/api-docs") || uri == "/favicon.ico" || uri == "/actuator/health") {
+        if (uri.startsWith("/swagger-ui") || uri.startsWith("/v3/api-docs") || uri == "/favicon.ico" || uri.startsWith("/actuator")) {
             filterChain.doFilter(request, response)
             return
         }
