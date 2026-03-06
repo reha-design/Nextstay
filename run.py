@@ -1,6 +1,7 @@
 import subprocess
 import os
 import time
+import webbrowser
 
 def main():
     root_dir = os.path.dirname(os.path.abspath(__file__))
@@ -24,7 +25,14 @@ def main():
     
     subprocess.run(cmd, shell=True)
     
-    print("\nDone! The backend is starting in the new window.")
+    print("\n[Wait] Waiting for the server to start (5 seconds)...")
+    time.sleep(5)
+    
+    swagger_url = "http://localhost:8080/swagger-ui/index.html"
+    print(f"Opening browser: {swagger_url}")
+    webbrowser.open(swagger_url)
+    
+    print("\nDone! The backend is starting in the new window and the browser is opening.")
 
 if __name__ == "__main__":
     main()
