@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
-import org.springframework.util.StopWatch
 
 @Component
 class GlobalLoggingFilter : OncePerRequestFilter() {
@@ -17,9 +16,7 @@ class GlobalLoggingFilter : OncePerRequestFilter() {
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val stopWatch = StopWatch()
-        stopWatch.start()
-
+        val startTime = System.nanoTime()
         val method = request.method
         val uri = request.requestURI
         val queryString = request.queryString?.let { "?$it" } ?: ""
@@ -29,11 +26,17 @@ class GlobalLoggingFilter : OncePerRequestFilter() {
         try {
             filterChain.doFilter(request, response)
         } finally {
-            stopWatch.stop()
+            val endTime = System.nanoTime()
+            val durationNs = endTime - startTime
             val status = response.status
-            val time = stopWatch.totalTimeMillis
             
-            log.info("[RESPONSE] $method $uri$queryString - Status: $status, Time: ${time}ms")
+            val timeDisplay = if (durationNs < 1_000_000) {
+                "${durationNs / 1_000}μs"
+            } else {
+                "${durationNs / 1_000_000}ms"
+            }
+            
+            log.info("[RESPONSE] $method $uri$queryString - Status: $status, Time: $timeDisplay")
         }
     }
 }
