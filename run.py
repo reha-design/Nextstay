@@ -6,32 +6,39 @@ import re
 
 def kill_process_on_port(port):
     """지정한 포트를 사용 중인 프로세스를 찾아 종료합니다."""
+    print(f"[체크] {port} 포트 사용 여부를 확인 중...")
     try:
-        # netstat을 사용하여 해당 포트를 사용하는 PID 찾기
-        output = subprocess.check_output(f"netstat -ano | findstr :{port}", shell=True, text=True)
+        # netstat 출력에서 포트번호와 LISTENING 상태인 라인만 정확히 필터링
+        # 정규표현식 \b를 사용하여 80801 같은 포트에 오탐되지 않도록 함
+        output = subprocess.check_output(f"netstat -ano | findstr /R \":{port}\\>.*LISTENING\"", shell=True, text=True)
         lines = output.strip().split('\n')
         
         pids = set()
         for line in lines:
-            if "LISTENING" in line:
-                # 라인의 마지막 부분이 PID입니다.
-                parts = line.split()
-                if parts:
-                    pids.add(parts[-1])
+            # 라인의 마지막 부분이 PID입니다.
+            parts = line.strip().split()
+            if parts:
+                pids.add(parts[-1])
         
         if pids:
-            print(f"\n[알림] {port} 포트를 사용 중인 기존 프로세스를 발견했습니다. (PID: {', '.join(pids)})")
+            print(f"[재시작] 기존 서버 프로세스를 발견했습니다. (PID: {', '.join(pids)})")
             for pid in pids:
-                print(f"종료 중... (PID: {pid})")
+                print(f"       >> PID {pid} 종료 시도...")
                 subprocess.run(f"taskkill /F /PID {pid}", shell=True, capture_output=True)
-            time.sleep(1) # 종료될 시간을 잠시 대기
-            print("기존 프로세스가 정리되었습니다.")
+            
+            # 포트가 완전히 반환될 때까지 잠시 대기
+            print("[대기] 포트 리소스가 해제될 때까지 잠시 기다립니다...")
+            time.sleep(2)
+            print("[완료] 기존 프로세스가 성공적으로 종료되었습니다.")
+        else:
+            print("[확인] 사용 중인 포트가 없습니다. 깨끗한 상태입니다.")
             
     except subprocess.CalledProcessError:
-        # 포트가 사용 중이지 않으면 findstr이 에러를 뱉지만, 이는 정상 상황입니다.
+        # findstr 결과가 없으면 에러가 발생하지만, 이는 포트가 사용 중이지 않다는 의미입니다.
+        print("[확인] 사용 중인 포트가 없습니다. 깨끗한 상태입니다.")
         pass
     except Exception as e:
-        print(f"프로세스 확인 중 오류 발생: {e}")
+        print(f"[경고] 프로세스 확인 중 예외 발생: {e}")
 
 def main():
     # 현재 스크립트 파일의 경로를 기준으로 디렉터리 설정
