@@ -22,4 +22,48 @@
 
 ---
 
-*(향후 `Accommodations`(숙소), `Reservations`(예약), `Coupons`(쿠폰) 등 핵심 테이블 구조가 도출되면 이 문서에 지속적으로 업데이트합니다.)*
+## 2. 🏠 Stays (숙소 테이블)
+
+| 컬럼명 | 원본 타입 | 길이/제약조건 | 널 허용 여부 | 설명 및 예시 |
+| :--- | :--- | :--- | :--- | :--- |
+| **`id`** | BigInt | Auto Increment, **PK** | NOT NULL | **[내부용]** 식별자 |
+| **`stay_no`** | Varchar | 20, **Unique** | NOT NULL | **[외부용]** 숙소 고유 번호 (예: `s20260307-001`) |
+| `host_id` | BigInt | **FK** (members.id) | NOT NULL | 소유주(호스트) 식별자 |
+| `name` | Varchar | 100 | NOT NULL | 숙소명 |
+| `address` | Varchar | 255 | NOT NULL | 상세 주소 |
+| `category` | Enum | 'HOTEL', 'PENSION', 'APARTMENT', 'GUESTHOUSE' | NOT NULL | 숙소 유형 |
+| `created_at`| DateTime | | NOT NULL | 등록일 |
+| `deleted_at`| DateTime | | NULL | 삭제일 |
+
+---
+
+## 3. 🛏️ Rooms (객실 테이블)
+
+| 컬럼명 | 원본 타입 | 길이/제약조건 | 널 허용 여부 | 설명 및 예시 |
+| :--- | :--- | :--- | :--- | :--- |
+| **`id`** | BigInt | Auto Increment, **PK** | NOT NULL | **[내부용]** 식별자 |
+| **`room_no`** | Varchar | 20, **Unique** | NOT NULL | **[외부용]** 객실 고유 번호 (예: `r20260307-001`) |
+| `stay_id` | BigInt | **FK** (stays.id) | NOT NULL | 소속 숙소 식별자 |
+| `name` | Varchar | 100 | NOT NULL | 객실명 |
+| `price_per_night` | Int | | NOT NULL | 1박당 가격 |
+| `created_at`| DateTime | | NOT NULL | 등록일 |
+| `deleted_at`| DateTime | | NULL | 삭제일 |
+
+---
+
+## 4. 📅 Bookings (예약 테이블)
+
+| 컬럼명 | 원본 타입 | 길이/제약조건 | 널 허용 여부 | 설명 및 예시 |
+| :--- | :--- | :--- | :--- | :--- |
+| **`id`** | BigInt | Auto Increment, **PK** | NOT NULL | **[내부용]** 식별자 |
+| **`booking_no`** | Varchar | 20, **Unique** | NOT NULL | **[외부용]** 예약 고유 번호 (예: `b20260307-001`) |
+| `member_id` | BigInt | **FK** (members.id) | NOT NULL | 예약자(게스트) 식별자 |
+| `room_id` | BigInt | **FK** (rooms.id) | NOT NULL | 예약 객실 식별자 |
+| `status` | Enum | 'PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED' | NOT NULL | 예약 상태 |
+| `check_in_date` | Date | | NOT NULL | 체크인 날짜 |
+| `check_out_date` | Date | | NOT NULL | 체크아웃 날짜 |
+| `total_price` | Int | | NOT NULL | 총 결제 금액 |
+| `created_at`| DateTime | | NOT NULL | 예약일 |
+| `deleted_at`| DateTime | | NULL | 취소/삭제일 |
+
+*(향후 `Coupons`(쿠폰), `Reviews`(리뷰) 등 테이블 구조가 추가되면 이 문서에 지속적으로 업데이트합니다.)*

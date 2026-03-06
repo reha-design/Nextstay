@@ -14,6 +14,9 @@ class Booking(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
+    @Column(name = "booking_no", unique = true, nullable = false, length = 20)
+    val bookingNo: String,
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     val guest: Member,
@@ -33,5 +36,8 @@ class Booking(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var status: BookingStatus = BookingStatus.PENDING
+    var status: BookingStatus = BookingStatus.PENDING,
+
+    @Column(name = "deleted_at")
+    var deletedAt: java.time.LocalDateTime? = null
 ) : BaseEntity()

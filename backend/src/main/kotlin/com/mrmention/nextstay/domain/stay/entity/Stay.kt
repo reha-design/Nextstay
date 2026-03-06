@@ -13,6 +13,9 @@ class Stay(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
+    @Column(name = "stay_no", unique = true, nullable = false, length = 20)
+    val stayNo: String,
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id", nullable = false)
     val host: Member,
@@ -32,6 +35,9 @@ class Stay(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val category: StayCategory,
+
+    @Column(name = "deleted_at")
+    var deletedAt: java.time.LocalDateTime? = null,
 
     @OneToMany(mappedBy = "stay", cascade = [CascadeType.ALL], orphanRemoval = true)
     val rooms: MutableList<Room> = mutableListOf()

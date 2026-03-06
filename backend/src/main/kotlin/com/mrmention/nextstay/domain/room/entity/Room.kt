@@ -10,6 +10,9 @@ class Room(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
+    @Column(name = "room_no", unique = true, nullable = false, length = 20)
+    val roomNo: String,
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stay_id", nullable = false)
     val stay: Stay,
@@ -24,5 +27,8 @@ class Room(
     val capacity: Int,
 
     @Column(columnDefinition = "TEXT")
-    val description: String
+    val description: String,
+
+    @Column(name = "deleted_at")
+    var deletedAt: java.time.LocalDateTime? = null
 ) : BaseEntity()
