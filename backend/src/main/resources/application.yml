@@ -21,3 +21,7 @@ jwt:
   # 개발용 고정 시크릿 (실제 운영 시 환경변수로 관리 필수)
   secret: nextstay_secret_key_fixed_20260307_very_long_string_for_testing
   expiration: 86400000 # 24시간
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %clr(%-5level) %clr([%thread]){faint} %clr(%logger{36}){cyan} : %msg%n"

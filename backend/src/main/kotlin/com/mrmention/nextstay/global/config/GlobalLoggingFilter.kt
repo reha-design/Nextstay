@@ -16,12 +16,20 @@ class GlobalLoggingFilter : OncePerRequestFilter() {
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
+        val uri = request.requestURI
+        
+        // 정적 리소스 및 Swagger 관련 로그 제외 (노이즈 제거)
+        if (uri.startsWith("/swagger-ui") || uri.startsWith("/v3/api-docs") || uri == "/favicon.ico") {
+            filterChain.doFilter(request, response)
+            return
+        }
+
         val startTime = System.nanoTime()
         val method = request.method
-        val uri = request.requestURI
         val queryString = request.queryString?.let { "?$it" } ?: ""
         
-        log.info("[REQUEST] $method $uri$queryString")
+        // [REQ] 형태로 축소
+        log.info("--> $method $uri$queryString")
 
         try {
             filterChain.doFilter(request, response)
@@ -36,7 +44,8 @@ class GlobalLoggingFilter : OncePerRequestFilter() {
                 "${durationNs / 1_000_000}ms"
             }
             
-            log.info("[RESPONSE] $method $uri$queryString - Status: $status, Time: $timeDisplay")
+            // [<-- 200] 형태로 축소
+            log.info("<-- $status $method $uri - $timeDisplay")
         }
     }
 }
