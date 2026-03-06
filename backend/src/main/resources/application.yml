@@ -34,11 +34,3 @@ management:
   endpoint:
     health:
       show-details: always
-
-spring:
-  devtools:
-    restart:
-      enabled: true
-      exclude: static/**,public/**,templates/**
-    livereload:
-      enabled: true
