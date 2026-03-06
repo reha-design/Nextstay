@@ -24,7 +24,15 @@ class SecurityConfig(
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
-                it.requestMatchers("/api/v1/auth/**", "/h2-console/**", "/favicon.ico").permitAll()
+                it.requestMatchers(
+                    "/api/v1/auth/**",
+                    "/h2-console/**",
+                    "/favicon.ico",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/swagger-resources/**",
+                    "/webjars/**"
+                ).permitAll()
                 it.anyRequest().permitAll() // 임시로 전체 허용 (Bypass 모드)
             }
             .addFilterBefore(DevAuthenticationFilter(), UsernamePasswordAuthenticationFilter::class.java)
