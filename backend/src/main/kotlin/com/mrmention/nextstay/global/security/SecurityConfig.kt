@@ -31,7 +31,8 @@ class SecurityConfig(
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                     "/swagger-resources/**",
-                    "/webjars/**"
+                    "/webjars/**",
+                    "/actuator/health"
                 ).permitAll()
                 it.anyRequest().permitAll() // 임시로 전체 허용 (Bypass 모드)
             }

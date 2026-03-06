@@ -25,3 +25,12 @@ jwt:
 logging:
   pattern:
     console: "%d{HH:mm:ss.SSS} %clr(%-5level) %clr([%thread]){faint} %clr(%logger{36}){cyan} : %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
