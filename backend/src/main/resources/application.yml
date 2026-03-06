@@ -16,3 +16,8 @@ spring:
 
 server:
   port: 8080
+
+jwt:
+  # 개발용 고정 시크릿 (실제 운영 시 환경변수로 관리 필수)
+  secret: nextstay_secret_key_fixed_20260307_very_long_string_for_testing
+  expiration: 86400000 # 24시간
