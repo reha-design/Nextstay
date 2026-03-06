@@ -11,6 +11,9 @@ class Member(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
+    @Column(name = "user_no", unique = true, nullable = false, length = 20)
+    val userNo: String,
+
     @Column(unique = true, nullable = false)
     val email: String,
 
@@ -25,5 +28,8 @@ class Member(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val role: MemberRole
+    val role: MemberRole,
+
+    @Column(name = "deleted_at")
+    var deletedAt: java.time.LocalDateTime? = null
 ) : BaseEntity()
