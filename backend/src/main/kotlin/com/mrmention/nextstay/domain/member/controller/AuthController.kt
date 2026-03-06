@@ -7,6 +7,7 @@ import com.mrmention.nextstay.domain.member.service.AuthService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -24,7 +25,7 @@ class AuthController(
     @PostMapping("/signup")
     fun signup(@Valid @RequestBody request: SignupRequest): ResponseEntity<String> {
         val userNo = authService.signup(request)
-        return ResponseEntity.ok(userNo)
+        return ResponseEntity.status(HttpStatus.CREATED).body(userNo)
     }
 
     @Operation(summary = "일반 이메일 로그인", description = "이메일과 비밀번호로 로그인하여 JWT 토큰을 발급받습니다.")

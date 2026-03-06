@@ -5,6 +5,8 @@ import com.mrmention.nextstay.domain.member.dto.LoginRequest
 import com.mrmention.nextstay.domain.member.dto.SignupRequest
 import com.mrmention.nextstay.domain.member.entity.Member
 import com.mrmention.nextstay.domain.member.entity.MemberRole
+import com.mrmention.nextstay.global.exception.AlreadyExistsException
+import com.mrmention.nextstay.global.exception.InvalidCredentialsException
 import com.mrmention.nextstay.domain.member.repository.MemberRepository
 import com.mrmention.nextstay.global.security.JwtTokenProvider
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -30,7 +32,7 @@ class AuthService(
     @Transactional
     fun signup(request: SignupRequest): String {
         if (memberRepository.findByEmail(request.email).isPresent) {
-            throw IllegalArgumentException("이미 가입된 이메일입니다.")
+            throw AlreadyExistsException("이미 가입된 이메일입니다.")
         }
 
         if (!request.isPasswordMatching()) {
@@ -62,10 +64,10 @@ class AuthService(
      */
     fun login(request: LoginRequest): AuthResponse {
         val member = memberRepository.findByEmail(request.email)
-            .orElseThrow { IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다.") }
+            .orElseThrow { InvalidCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.") }
 
         if (!passwordEncoder.matches(request.password, member.password)) {
-            throw IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다.") }
+            throw InvalidCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.") }
 
         val token = jwtTokenProvider.createToken(member.userNo, member.role.name)
 
