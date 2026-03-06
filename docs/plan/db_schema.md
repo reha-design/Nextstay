@@ -17,6 +17,10 @@
 | `password` | Varchar | 255 | NOT NULL | BCrypt 등으로 단방향 암호화 처리된 해시 비밀번호 |
 | `name` | Varchar | 30 | NOT NULL | 사용자의 진짜 실명 원본 (예: `김현수`) (⚠️ API 응답 시 DTO에서 `김현*` 로 마스킹 처리 필수) |
 | `role` | Enum | 'GUEST', 'HOST', 'ADMIN' | NOT NULL | 백오피스와 게스트웹 접근 권한을 가르는 핵심 권한자 |
+| `provider` | Enum | 'LOCAL', 'KAKAO', 'APPLE' | NOT NULL | 가입 경로 (기본값: 'LOCAL') |
+| `provider_id`| Varchar | 255 | NULL | 소셜 로그인 시 제공되는 고유 식별값 |
+| `terms_agreed`| Boolean | | NOT NULL | 이용약관 및 개인정보 수집 동의 여부 |
+| `marketing_agreed`| Boolean | | NOT NULL | 마케팅 정보 수신 동의 여부 (선택) |
 | `created_at`| DateTime | | NOT NULL | 가입일 (기본값: 현재 시간) |
 | `deleted_at`| DateTime | | NULL | 회원 탈퇴 시 Soft-Delete 처리를 위한 삭제 일자 |
 

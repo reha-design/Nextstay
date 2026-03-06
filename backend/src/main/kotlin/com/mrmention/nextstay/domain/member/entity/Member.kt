@@ -4,6 +4,7 @@ import com.mrmention.nextstay.global.entity.BaseEntity
 import jakarta.persistence.*
 
 enum class MemberRole { GUEST, HOST, ADMIN }
+enum class SocialProvider { LOCAL, KAKAO, APPLE }
 
 @Entity
 @Table(name = "members")
@@ -29,6 +30,19 @@ class Member(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val role: MemberRole,
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    val provider: SocialProvider = SocialProvider.LOCAL,
+
+    @Column(name = "provider_id")
+    val providerId: String? = null,
+
+    @Column(name = "terms_agreed", nullable = false)
+    val termsAgreed: Boolean = false,
+
+    @Column(name = "marketing_agreed", nullable = false)
+    val marketingAgreed: Boolean = false,
 
     @Column(name = "deleted_at")
     var deletedAt: java.time.LocalDateTime? = null
