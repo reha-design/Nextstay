@@ -1,6 +1,7 @@
 package com.mrmention.nextstay.global.exception
 
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -35,6 +36,19 @@ class GlobalExceptionHandler {
             message = message
         )
         return ResponseEntity.badRequest().body(errorResponse)
+    }
+
+    /**
+     * 데이터 무결성 위반 처리 (중복 키 등)
+     */
+    @ExceptionHandler(DataIntegrityViolationException::class)
+    fun handleDataIntegrityViolationException(e: DataIntegrityViolationException): ResponseEntity<ErrorResponse> {
+        log.warn("[DataIntegrityViolation] ${e.message}")
+        val errorResponse = ErrorResponse(
+            status = 409,
+            message = "이미 존재하는 데이터입니다. (중복 오류)"
+        )
+        return ResponseEntity.status(409).body(errorResponse)
     }
 
     /**
