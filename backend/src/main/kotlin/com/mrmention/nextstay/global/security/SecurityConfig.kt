@@ -34,7 +34,8 @@ class SecurityConfig(
                     "/webjars/**",
                     "/actuator/health"
                 ).permitAll()
-                it.anyRequest().permitAll() // 임시로 전체 허용 (Bypass 모드)
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/stays").hasRole("HOST")
+                .anyRequest().authenticated()
             }
             .addFilterBefore(DevAuthenticationFilter(), UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter::class.java)

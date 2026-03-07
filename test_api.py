@@ -78,6 +78,41 @@ def run_tests():
     resp = requests.post(f"{BASE_URL}/signup", json=invalid_user)
     print_result("유효성 검사 실패 (잘못된 이메일)", resp)
 
+    # 7. HOST 계정 가입 및 숙소 등록 테스트
+    print("\n--- 호스트 기능 테스트 ---")
+    host_email = f"host_{int(time.time())}@naver.com"
+    host_user = test_user.copy()
+    host_user.update({
+        "role": "HOST",
+        "email": host_email,
+        "name": "김호스트"
+    })
+    
+    # 호스트 가입
+    resp = requests.post(f"{BASE_URL}/signup", json=host_user)
+    print_result("호스트 회원가입", resp)
+
+    # 호스트 로그인
+    resp = requests.post(f"{BASE_URL}/login", json={"email": host_email, "password": "Password123!"})
+    print_result("호스트 로그인", resp)
+    
+    host_token = None
+    if resp.status_code == 200:
+        host_token = resp.json().get("accessToken")
+
+    # 숙소 등록 (아직 구현 전이면 404 또는 403 예상)
+    if host_token:
+        stay_data = {
+            "name": "바다 보이는 펜션",
+            "description": "파도 소리가 들리는 아늑한 펜션입니다.",
+            "address": "강원도 강릉시 해안로 123",
+            "city": "강릉",
+            "category": "PENSION"
+        }
+        headers = {"Authorization": f"Bearer {host_token}"}
+        resp = requests.post("http://localhost:8080/api/v1/stays", json=stay_data, headers=headers)
+        print_result("숙소 등록 시도", resp)
+
     print("\n=== 모든 테스트 완료 ===")
 
 if __name__ == "__main__":
