@@ -7,7 +7,13 @@ enum class MemberRole { GUEST, HOST, ADMIN }
 enum class SocialProvider { LOCAL, KAKAO, APPLE }
 
 @Entity
-@Table(name = "members")
+@Table(
+    name = "members",
+    uniqueConstraints = [
+        UniqueConstraint(name = "uk_member_email", columnNames = ["email"]),
+        UniqueConstraint(name = "uk_member_user_no", columnNames = ["user_no"])
+    ]
+)
 class Member(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,

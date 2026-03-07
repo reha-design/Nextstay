@@ -43,10 +43,17 @@ class GlobalExceptionHandler {
      */
     @ExceptionHandler(DataIntegrityViolationException::class)
     fun handleDataIntegrityViolationException(e: DataIntegrityViolationException): ResponseEntity<ErrorResponse> {
-        log.warn("[DataIntegrityViolation] ${e.message}")
+        val message = e.message ?: ""
+        val userFriendlyMessage = when {
+            message.contains("uk_member_email") || message.contains("email") -> "이미 가입된 이메일입니다."
+            message.contains("uk_member_user_no") || message.contains("user_no") -> "중복된 회원 번호가 발생했습니다. 잠시 후 다시 시도해 주세요."
+            else -> "이미 존재하는 데이터입니다. (중복 오류)"
+        }
+        
+        log.warn("[DataIntegrityViolation] $userFriendlyMessage - $message")
         val errorResponse = ErrorResponse(
             status = 409,
-            message = "이미 존재하는 데이터입니다. (중복 오류)"
+            message = userFriendlyMessage
         )
         return ResponseEntity.status(409).body(errorResponse)
     }
