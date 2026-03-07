@@ -31,7 +31,8 @@ def run_tests():
         return
 
     # 테스트 데이터
-    test_email = f"test_{int(time.time())}@naver.com"
+    timestamp = int(time.time() * 1000) # 밀리초 단위로 더 높은 유일성 보장
+    test_email = f"test_{timestamp}@naver.com"
     test_user = {
         "role": "GUEST",
         "name": "홍길동",
@@ -107,11 +108,45 @@ def run_tests():
             "description": "파도 소리가 들리는 아늑한 펜션입니다.",
             "address": "강원도 강릉시 해안로 123",
             "city": "강릉",
-            "category": "PENSION"
+            "category": "PENSION",
+            "discountPolicies": [
+                {"minNights": 6, "discountRate": 0.33},
+                {"minNights": 14, "discountRate": 0.59},
+                {"minNights": 29, "discountRate": 0.71}
+            ],
+            "seasonPrices": [
+                {
+                    "seasonName": "여름 성수기",
+                    "startDate": "2026-07-01",
+                    "endDate": "2026-08-31",
+                    "multiplier": 1.5
+                },
+                {
+                    "seasonName": "연말 피크",
+                    "startDate": "2026-12-20",
+                    "endDate": "2026-12-31",
+                    "multiplier": 1.3
+                }
+            ]
         }
         headers = {"Authorization": f"Bearer {host_token}"}
         resp = requests.post("http://localhost:8080/api/v1/stays", json=stay_data, headers=headers)
-        print_result("숙소 등록 시도", resp)
+        print_result("숙소 등록 시도 (할인 정책 포함)", resp)
+        
+        stay_no = None
+        if resp.status_code == 201:
+            stay_no = resp.text
+            
+        if stay_no:
+            room_data = {
+                "stayNo": stay_no,
+                "name": "오션뷰 스위트룸",
+                "pricePerNight": 150000,
+                "capacity": 4,
+                "description": "바다가 한눈에 보이는 최고급 스위트룸입니다."
+            }
+            resp = requests.post("http://localhost:8080/api/v1/rooms", json=room_data, headers=headers)
+            print_result("객실 등록 시도", resp)
 
     print("\n=== 모든 테스트 완료 ===")
 
