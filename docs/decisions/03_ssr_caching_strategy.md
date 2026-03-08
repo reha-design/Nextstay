@@ -1,6 +1,7 @@
 # 🚀 Nextstay SSR 부하 절감 및 캐싱 전략 (CloudFront 활용)
 
-SSR은 CSR과 달리 매 요청마다 서버가 HTML을 렌더링하므로 CPU/메모리 부하가 큽니다. 이를 해결하기 위해 **'렌더링 결과(HTML)를 엣지(Edge)에서 캐싱'**하는 전략이 핵심입니다.
+SSR은 CSR과 달리 매 요청마다 서버가 HTML을 렌더링하므로 CPU/메모리 부하가 큽니다. 이를 해결하기 위해  **'렌더링 결과(HTML)를 엣지(Edge)에서 캐싱'**  하는 전략이 핵심입니다.
+
 
 ## 1. 🏗️ 전체 구조 (Architecture Visualization)
 
@@ -25,7 +26,8 @@ graph LR
 ### ① Cache-Control 헤더의 활용 (The Contract)
 Nuxt 서버가 응답을 보낼 때, CloudFront(브라우저 아님!)에게 이 페이지를 얼마나 오래 가지고 있어도 되는지 알려줘야 합니다.
 
-*   **Public Cache (CloudFront 전용)**:
+*    **Public Cache (CloudFront 전용)**  :
+
     ```http
     Cache-Control: public, s-maxage=60, stale-while-revalidate=30
     ```
@@ -48,10 +50,11 @@ Nuxt 서버가 응답을 보낼 때, CloudFront(브라우저 아님!)에게 이 
 
 | 페이지 타입 | 캐싱 여부 | 전략 |
 | :--- | :--- | :--- |
-| **메인 / 숙소 목록** | **YES** | `s-maxage=60` (1분 캐싱). 트래픽이 몰려도 서버는 1분에 1번만 일하면 됨. |
-| **숙소 상세** | **YES** | `s-maxage=300` (5분 캐싱). 이미지와 텍스트 위주이므로 공격적으로 캐싱 가능. |
-| **예약 상세 / 마이페이지** | **NO** | `Cache-Control: no-store`. 개인 정보가 담겨있으므로 절대 캐싱하지 않음. |
-| **JS / CSS / 이미지** | **YES** | `max-age=31536000` (1년 캐싱). S3에 위치하며 빌드 해시가 바뀌지 않는 한 영구 캐싱. |
+|  **메인 / 숙소 목록**  |  **YES**  | `s-maxage=60` (1분 캐싱). 트래픽이 몰려도 서버는 1분에 1번만 일하면 됨. |
+|  **숙소 상세**  |  **YES**  | `s-maxage=300` (5분 캐싱). 이미지와 텍스트 위주이므로 공격적으로 캐싱 가능. |
+|  **예약 상세 / 마이페이지**  |  **NO**  | `Cache-Control: no-store`. 개인 정보가 담겨있으므로 절대 캐싱하지 않음. |
+|  **JS / CSS / 이미지**  |  **YES**  | `max-age=31536000` (1년 캐싱). S3에 위치하며 빌드 해시가 바뀌지 않는 한 영구 캐싱. |
+
 
 ## 4. 💡 도입 시 얻는 이득 (Strategic Benefits)
 
