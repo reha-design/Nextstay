@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { Database } from "bun:sqlite";
 import { cors } from "@elysiajs/cors";
+import { rateLimit } from "elysia-rate-limit";
 
 // 🗄️ SQLite 데이터베이스 초기화 및 WAL 모드 설정
 const db = new Database("analytics.sqlite", { create: true });
@@ -30,6 +31,11 @@ db.run(`
 
 const app = new Elysia()
   .use(cors())
+  .use(rateLimit({
+    duration: 60000,
+    max: 30,
+    errorResponse: "Too many requests, please try again later."
+  }))
   .get("/", () => ({ status: "ok", engine: "Bun + Elysia + SQLite (WAL)" }))
   
   // 1. 단순 이벤트 로깅
