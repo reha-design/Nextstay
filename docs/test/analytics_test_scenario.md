@@ -15,39 +15,39 @@
 ## 📋 테스트 시나리오 리스트
 
 ### 시나리오 1: 서버 헬스 체크 및 DB 초기화
-*   ** 목적 ** :
+*   **목적**  :
  서버가 정상 가동 중이며 SQLite 테이블이 생성되었는지 확인.
-*   ** 방법 ** :
+*   **방법**  :
 
     ```bash
     curl http://localhost:4000/
     ```
-*   ** 기대 결과 ** :
+*   **기대 결과**  :
  `{"status":"ok", "engine":"Bun + Elysia + SQLite (WAL)"}` 응답 확인.
 
 ### 시나리오 2: 직접 API 호출 (데이터 저장 검증)
-*   ** 목적 ** :
+*   **목적**  :
  API 요청 시 SQLite에 실제 데이터가 정합성 있게 저장되는지 확인.
-*   ** 방법 ** :
+*   **방법**  :
 
     ```bash
     curl -X POST http://localhost:4000/stats/v1/visits \
       -H "Content-Type: application/json" \
       -d '{"path": "/test/manual", "userId": "user_999", "userAgent": "Curl-Test"}'
     ```
-*   ** 기대 결과 ** :
+*   **기대 결과**  :
  `{"success":true, "message":"Visit logged to SQLite (WAL)"}` 응답 확인.
 
 ### 시나리오 3: 프론트엔드 자동 페이지 추적 (Client-side)
-*   ** 목적 ** :
+*   **목적**  :
  사용자가 페이지를 이동할 때 자동으로 로그가 전송되는지 확인.
-*   ** 방법 ** :
+*   **방법**  :
 
     1. 브라우저에서 `http://localhost:3000` 접속.
     2. 개발자 도구(F12)의 ** Network 탭 ** 열기.
 
     3. 메인 -> 로그인 -> 상세 페이지 등으로 메뉴 이동.
-*   ** 기대 결과 ** :
+*   **기대 결과**  :
  이동할 때마다 `4000`번 포트의 `/stats/v1/visits`로 POST 요청이 가는지 확인.
 
 ### 시나리오 4: 타입 안전성(Eden) 검증 (개발 단계)
