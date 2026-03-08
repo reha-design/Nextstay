@@ -86,9 +86,11 @@
 ### 📊 실시간 & 로그 (Analytics)
 | 도메인 | 메소드 | 엔드포인트 | 설명 | 권한 |
 | :--- | :--- | :--- | :--- | :--- |
-| `Visit` | **POST** | `/stats/v1/visits` | [B2C 프론트엔드] 방 조회수 및 방문자 수 로깅 | 누구나 |
-| `Visit` | **GET** | `/stats/v1/visits/today` | 오늘 전체 방문자 통계 조회 | 누구나 |
-| `Health`| **GET** | `/stats/v1/health` | 시스템 상태 라우팅 체크 (매우 가벼운 요청) | 누구나 |
+| `Event` | **POST** | `/analytics/event` | [B2C 프론트엔드] 커스텀 이벤트 로깅 (이름, 페이로드, 타임스탬프) | 누구나 |
+| `Visit` | **POST** | `/stats/v1/visits` | [B2C 프론트엔드] 방 조회수 및 방문자 수 로깅 (경로, 유저ID, UA) | 누구나 |
+| `Visit` | **GET** | `/stats/v1/visits/today` | 오늘 전체 방문자 통계 및 인기 경로 TOP 5 조회 | 누구나 |
+| `Health`| **GET** | `/` | 시스템 상태 라우팅 체크 (Bun + Elysia + SQLite WAL) | 누구나 |
+
 
 ---
 
