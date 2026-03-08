@@ -1,6 +1,7 @@
 # 🐰 RabbitMQ 중심 비동기 아키텍처 구조도
 
-이 문서는 Nextstay 프로젝트의 **최전선(Main API)과 RabbitMQ를 활용한 비동기 처리 흐름**을 시각화한 문서입니다.
+이 문서는 Nextstay 프로젝트의 ** 최전선(Main API)과 RabbitMQ를 활용한 비동기 처리 흐름 ** 을 시각화한 문서입니다.
+
 
 ## 🏗️ 전체 시스템 구조
 
