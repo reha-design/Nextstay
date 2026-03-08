@@ -2,9 +2,9 @@ spring:
   application:
     name: nextstay
   datasource:
-    url: jdbc:mysql://localhost:3306/nextstay?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: root
-    password: root
+    url: jdbc:mysql://localhost:13306/nextstay?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: nextstay_admin
+    password: nextstay_db_pass_2026
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -13,6 +13,14 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %clr(%-5level) --- %msg%n"
 
 server:
   port: 8080
@@ -21,10 +29,6 @@ jwt:
   # 개발용 고정 시크릿 (실제 운영 시 환경변수로 관리 필수)
   secret: nextstay_secret_key_fixed_20260307_very_long_string_for_testing
   expiration: 86400000 # 24시간
-
-logging:
-  pattern:
-    console: "%d{HH:mm:ss.SSS} %clr(%-5level) --- %msg%n"
 
 management:
   endpoints:
