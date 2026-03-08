@@ -4,5 +4,13 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: [
     '@pinia/nuxt'
-  ]
+  ],
+  runtimeConfig: {
+    public: {
+      analyticsUrl: process.env.NUXT_PUBLIC_ANALYTICS_URL || 'http://localhost:4000'
+    }
+  },
+  devServer: {
+    port: 3000
+  }
 })
