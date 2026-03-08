@@ -21,7 +21,7 @@ class JwtTokenProvider(
 
     fun createToken(userNo: String, role: String): String {
         val now = Date()
-        val expiryDate = Date(now.time + expirationTime)
+        val expiryDate = Date(now.time + expirationTime) // Access token expiration
 
         return Jwts.builder()
             .subject(userNo)
@@ -30,6 +30,40 @@ class JwtTokenProvider(
             .expiration(expiryDate)
             .signWith(key)
             .compact()
+    }
+
+    // 7일 유효기간 리프레시 토큰 (밀리초 변환: 7일 * 24시간 * 60분 * 60초 * 1000)
+    fun createRefreshToken(userNo: String, role: String): String {
+        val now = Date()
+        val refreshExpiryDate = Date(now.time + (1000L * 60 * 60 * 24 * 7)) 
+
+        return Jwts.builder()
+            .subject(userNo)
+            .claim("role", role)
+            .issuedAt(now)
+            .expiration(refreshExpiryDate)
+            .signWith(key)
+            .compact()
+    }
+
+    // Refresh Token 검증 후 subject(userNo) 반환
+    fun getUserNoFromToken(token: String): String {
+        val claims: Claims = Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .payload
+        return claims.subject
+    }
+    
+    // Role 반환
+    fun getRoleFromToken(token: String): String {
+        val claims: Claims = Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .payload
+        return claims["role"] as String
     }
 
     fun getAuthentication(token: String): Authentication {
