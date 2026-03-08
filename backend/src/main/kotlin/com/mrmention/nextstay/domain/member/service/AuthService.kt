@@ -2,6 +2,7 @@ package com.mrmention.nextstay.domain.member.service
 
 import com.mrmention.nextstay.domain.member.dto.AuthResponse
 import com.mrmention.nextstay.domain.member.dto.LoginRequest
+import com.mrmention.nextstay.domain.member.dto.LoginResult
 import com.mrmention.nextstay.domain.member.dto.SignupRequest
 import com.mrmention.nextstay.domain.member.entity.Member
 import com.mrmention.nextstay.domain.member.entity.MemberRole
@@ -31,7 +32,7 @@ class AuthService(
      */
     @Transactional
     fun signup(request: SignupRequest): String {
-        if (memberRepository.findByEmail(request.email).isPresent) {
+        if (memberRepository.findByEmail(request.email) != null) {
             throw AlreadyExistsException("이미 가입된 이메일입니다.")
         }
 
@@ -62,22 +63,53 @@ class AuthService(
     /**
      * 로그인 및 JWT 발급
      */
-    fun login(request: LoginRequest): AuthResponse {
+    fun login(request: LoginRequest): LoginResult {
         val member = memberRepository.findByEmail(request.email)
-            .orElseThrow { InvalidCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.") }
+            ?: throw InvalidCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.")
 
         if (!passwordEncoder.matches(request.password, member.password)) {
             throw InvalidCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.") }
 
         val token = jwtTokenProvider.createToken(member.userNo, member.role.name)
+        val refreshToken = jwtTokenProvider.createRefreshToken(member.userNo, member.role.name)
 
-        return AuthResponse(
+        val authResponse = AuthResponse(
             accessToken = token,
             userNo = member.userNo,
             email = member.email,
             name = member.name,
+            phone = member.phone,
             role = member.role
         )
+        
+        return LoginResult(authResponse, refreshToken)
+    }
+
+    /**
+     * 리프레시 토큰 검증 및 액세스 토큰 재발급
+     */
+    fun refresh(refreshToken: String): LoginResult {
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw InvalidCredentialsException("유효하지 않거나 만료된 리프레시 토큰입니다.")
+        }
+
+        val userNo = jwtTokenProvider.getUserNoFromToken(refreshToken)
+        val member = memberRepository.findByUserNo(userNo)
+            ?: throw InvalidCredentialsException("존재하지 않는 회원입니다.")
+
+        val newAccessToken = jwtTokenProvider.createToken(member.userNo, member.role.name)
+        val newRefreshToken = jwtTokenProvider.createRefreshToken(member.userNo, member.role.name)
+
+        val authResponse = AuthResponse(
+            accessToken = newAccessToken,
+            userNo = member.userNo,
+            email = member.email,
+            name = member.name,
+            phone = member.phone,
+            role = member.role
+        )
+
+        return LoginResult(authResponse, newRefreshToken)
     }
 
     /**
@@ -86,8 +118,8 @@ class AuthService(
      */
     private fun generateUserNo(role: MemberRole): String {
         val prefix = if (role == MemberRole.HOST) "h" else "m"
-        val date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-        val seq = String.format("%03d", sequence.getAndIncrement())
-        return "$prefix$date-$seq"
+        val date = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyMMddHHmm"))
+        val random = (10..99).random()
+        return "$prefix$date$random"
     }
 }

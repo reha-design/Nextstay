@@ -32,7 +32,7 @@ class Booking(
     val checkOutDate: LocalDate,
 
     @Column(nullable = false)
-    val totalPrice: Int,
+    val totalPrice: Long,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

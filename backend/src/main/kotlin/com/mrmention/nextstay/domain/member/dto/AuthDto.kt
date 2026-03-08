@@ -25,5 +25,15 @@ data class AuthResponse(
     val userNo: String,
     val email: String,
     val name: String,
+    val phone: String?,
     val role: MemberRole
+)
+
+/**
+ * 로그인 처리 결과 DTO (Controller로 전달용)
+ * refreshToken은 응답 바디가 아닌 쿠키(HttpOnly)로 설정하기 위해 분리
+ */
+data class LoginResult(
+    val authResponse: AuthResponse,
+    val refreshToken: String
 )

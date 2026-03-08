@@ -39,6 +39,18 @@ class Stay(
     @Column(name = "deleted_at")
     var deletedAt: java.time.LocalDateTime? = null,
 
+    @Column
+    val latitude: Double? = null,
+
+    @Column
+    val longitude: Double? = null,
+
     @OneToMany(mappedBy = "stay", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val rooms: MutableList<Room> = mutableListOf()
+    val rooms: MutableList<Room> = mutableListOf(),
+
+    @OneToMany(mappedBy = "stay", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val discountPolicies: MutableSet<StayDiscountPolicy> = mutableSetOf(),
+
+    @OneToMany(mappedBy = "stay", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val seasonPrices: MutableSet<StaySeasonPrice> = mutableSetOf()
 ) : BaseEntity()

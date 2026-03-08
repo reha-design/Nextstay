@@ -35,4 +35,18 @@ class StayController(
         val response = stayService.getAllStays()
         return ResponseEntity.ok(response)
     }
+
+    @Operation(summary = "메인 페이지용 숙소 추천 목록", description = "메인 화면에 노출할 최저가 및 썸네일 포함 숙소 리스트를 반환합니다.")
+    @GetMapping("/main")
+    fun getMainPageStays(): ResponseEntity<List<com.mrmention.nextstay.domain.stay.dto.MainPageStayResponse>> {
+        val response = stayService.getMainPageStays()
+        return ResponseEntity.ok(response)
+    }
+
+    @Operation(summary = "숙소 상세 조회", description = "숙소 식별 번호(stayNo)를 기반으로 상세 정보와 객실 목록을 조회합니다.")
+    @GetMapping("/{stayNo}")
+    fun getStayDetail(@PathVariable stayNo: String): ResponseEntity<com.mrmention.nextstay.domain.stay.dto.StayDetailResponse> {
+        val response = stayService.getStayDetail(stayNo)
+        return ResponseEntity.ok(response)
+    }
 }
