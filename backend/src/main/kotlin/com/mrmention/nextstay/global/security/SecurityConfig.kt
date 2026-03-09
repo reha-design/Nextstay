@@ -46,11 +46,15 @@ class SecurityConfig(
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/rooms/*/bookings").hasRole("GUEST")
                 .anyRequest().authenticated()
             }
+            .addFilterBefore(ApiCacheControlFilter(), UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(DevAuthenticationFilter(), UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter::class.java)
         
-        // H2 콘솔 사용을 위한 설정 (필요 시)
-        http.headers { it.frameOptions { frame -> frame.sameOrigin() } }
+        // H2 콘솔 및 캐시 헤더 설정
+        http.headers { headers ->
+            headers.frameOptions { it.sameOrigin() }
+            headers.cacheControl { it.disable() } // ApiCacheControlFilter에서 직접 제어하기 위해 기본값 비활성화
+        }
 
         return http.build()
     }

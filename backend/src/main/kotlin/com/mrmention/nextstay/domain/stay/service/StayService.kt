@@ -12,11 +12,15 @@ import com.mrmention.nextstay.domain.stay.dto.RoomDetailResponse
 import com.mrmention.nextstay.domain.stay.entity.Stay
 import com.mrmention.nextstay.domain.stay.entity.StayDiscountPolicy
 import com.mrmention.nextstay.domain.stay.entity.StaySeasonPrice
+import com.mrmention.nextstay.domain.stay.dto.PriceTierDto
+import com.mrmention.nextstay.domain.price.dto.PriceCalculationRequest
+import com.mrmention.nextstay.domain.price.service.PricingEngine
 import com.mrmention.nextstay.domain.stay.repository.StayRepository
 import com.mrmention.nextstay.global.exception.BusinessException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.atomic.AtomicLong
 
@@ -25,7 +29,8 @@ import java.util.concurrent.atomic.AtomicLong
 class StayService(
     private val stayRepository: StayRepository,
     private val memberRepository: MemberRepository,
-    private val roomRepository: RoomRepository
+    private val roomRepository: RoomRepository,
+    private val pricingEngine: PricingEngine
 ) {
     private val sequence = AtomicLong(1)
 
@@ -91,7 +96,20 @@ class StayService(
         val stays = stayRepository.findAll()
         return stays.map { stay ->
             val rooms = roomRepository.findAllByStayId(stay.id!!)
-            val minPrice = rooms.minOfOrNull { it.pricePerNight } ?: 50000
+            val cheapestRoom = rooms.minByOrNull { it.pricePerNight }
+            val minPrice = cheapestRoom?.pricePerNight ?: 50000
+
+            val priceTiers = if (cheapestRoom != null) {
+                listOf(6, 14, 29).map { nights ->
+                    val result = pricingEngine.calculate(cheapestRoom, PriceCalculationRequest(LocalDate.now(), LocalDate.now().plusDays(nights.toLong())))
+                    PriceTierDto(
+                        nights = nights,
+                        price = result.pricing.finalTotalPrice,
+                        originalPrice = result.pricing.totalOriginalPrice,
+                        discountRate = result.pricing.totalDiscountRate
+                    )
+                }
+            } else emptyList()
 
             MainPageStayResponse(
                 stayNo = stay.stayNo,
@@ -100,7 +118,8 @@ class StayService(
                 category = stay.category.name,
                 minPrice = minPrice,
                 thumbnailUrl = "https://picsum.photos/seed/${stay.stayNo}/400/300",
-                rating = String.format("%.1f", (40..50).random() / 10.0).toDouble()
+                rating = String.format("%.1f", (40..50).random() / 10.0).toDouble(),
+                priceTiers = priceTiers
             )
         }
     }
@@ -131,6 +150,9 @@ class StayService(
                 "https://picsum.photos/seed/${stay.stayNo}_3/1200/800"
             ),
             rooms = rooms.map { room ->
+                // 29박(한달살기) 기준 할인가 계산
+                val result = pricingEngine.calculate(room, PriceCalculationRequest(LocalDate.now(), LocalDate.now().plusDays(29)))
+                
                 RoomDetailResponse(
                     roomNo = room.roomNo,
                     name = room.name,
@@ -138,7 +160,10 @@ class StayService(
                     type = "STANDARD", // 임시 타입
                     basePrice = room.pricePerNight,
                     capacity = room.capacity,
-                    imageUrls = listOf("https://picsum.photos/seed/${room.roomNo}/400/300")
+                    imageUrls = listOf("https://picsum.photos/seed/${room.roomNo}/400/300"),
+                    monthlyPrice = result.pricing.finalTotalPrice,
+                    discountRate = result.pricing.totalDiscountRate,
+                    badgeText = result.display.badgeText
                 )
             }
         )

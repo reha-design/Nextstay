@@ -3,7 +3,8 @@ import os
 import sys
 
 def main():
-    base_dir = r"c:\portpolio\Nextstay"
+    # 스크립트 파일(python/check_compile.py)의 부모 디렉토리를 프로젝트 루트(base_dir)로 설정
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     backend_dir = os.path.join(base_dir, "backend")
     frontend_dir = os.path.join(base_dir, "frontend-guest")
 

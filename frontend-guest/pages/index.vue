@@ -50,6 +50,13 @@ import RoomCard from '~/components/RoomCard.vue'
 
 const router = useRouter()
 
+export interface PriceTierDto {
+  nights: number
+  price: number
+  originalPrice: number
+  discountRate: number
+}
+
 export interface MainPageStayResponse {
   stayNo: string
   name: string
@@ -58,6 +65,7 @@ export interface MainPageStayResponse {
   minPrice: number
   thumbnailUrl: string
   rating: number
+  priceTiers: PriceTierDto[]
 }
 
 // Fetch main page accommodations

@@ -70,7 +70,15 @@ data class MainPageStayResponse(
     val category: String,
     val minPrice: Int,
     val thumbnailUrl: String,
-    val rating: Double
+    val rating: Double,
+    val priceTiers: List<PriceTierDto> = emptyList()
+)
+
+data class PriceTierDto(
+    val nights: Int,
+    val price: Long,
+    val originalPrice: Long,
+    val discountRate: Int
 )
 
 data class StayDetailResponse(
@@ -95,5 +103,8 @@ data class RoomDetailResponse(
     val type: String,
     val basePrice: Int,
     val capacity: Int,
-    val imageUrls: List<String>
+    val imageUrls: List<String>,
+    val monthlyPrice: Long? = null,
+    val discountRate: Int? = null,
+    val badgeText: String? = null
 )

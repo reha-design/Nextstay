@@ -4,11 +4,13 @@
     <header class="hero-section">
       <div class="container">
         <div class="image-grid">
-          <div class="main-image">
+          <div class="grid-main">
             <img :src="stay.images[0]" :alt="stay.name" @click="openGallery(0)" />
           </div>
-          <div class="sub-images">
-            <img v-for="(img, idx) in stay.images.slice(1, 5)" :key="idx" :src="img" :alt="stay.name" @click="openGallery(idx + 1)" />
+          <div class="grid-sub">
+            <div v-for="(img, idx) in stay.images.slice(1, 5)" :key="idx" class="sub-img-wrapper">
+              <img :src="img" :alt="stay.name" @click="openGallery(idx + 1)" />
+            </div>
             <button v-if="stay.images.length > 5" class="view-all-btn" @click="openGallery(0)">
               <span class="icon">🔍</span> 사진 전체보기
             </button>
@@ -25,9 +27,19 @@
             {{ tab.label }}
           </li>
         </ul>
-        <div v-if="isSticky" class="sticky-price-info">
-          <span class="price">₩{{ minPrice.toLocaleString() }}~</span>
-          <button class="book-now-btn" @click="scrollToTab('rooms')">객실예약</button>
+        <div v-if="isSticky" class="sticky-cta">
+          <div class="cta-info">
+            <div class="price-row">
+              <span class="label">총액</span>
+              <span class="amount">₩{{ (minPrice * totalNights).toLocaleString() }}</span>
+            </div>
+            <div class="rating-row">
+              <span class="star">★</span>
+              <span class="score">{{ stay.rating }}</span>
+              <span class="count"> · 후기 128개</span>
+            </div>
+          </div>
+          <button class="book-now-btn" @click="scrollToTab('rooms')">예약하기</button>
         </div>
       </div>
     </nav>
@@ -42,13 +54,12 @@
             <div class="rating-box">
               <span class="star">★</span>
               <span class="score">{{ stay.rating }}</span>
-              <span class="count">(리뷰 128)</span>
+              <span class="count"> · 리뷰 128개</span>
             </div>
           </div>
           <h1 class="stay-title">{{ stay.name }}</h1>
-          <p class="address">
-            <span class="icon">📍</span> {{ stay.address }}
-            <a href="#location" class="map-link">지도보기</a>
+          <p class="address-row">
+            {{ stay.address }}
           </p>
           
           <div class="tags-row">
@@ -58,7 +69,7 @@
 
         <hr class="divider" />
 
-        <!-- 4. Amenities / Options -->
+        <!-- 4. Amenities -->
         <section class="section amenities-section">
           <h2 class="section-title">편의시설 및 서비스</h2>
           <div class="amenity-grid">
@@ -71,7 +82,7 @@
 
         <hr class="divider" />
 
-        <!-- 5. Room Selection (Core Function) -->
+        <!-- 5. Room Selection -->
         <section id="rooms" class="section rooms-section">
           <h2 class="section-title">객실 선택</h2>
           <div class="room-cards">
@@ -87,18 +98,23 @@
                 </div>
                 <div class="room-info-points">
                   <div class="point">
-                    <span class="label">체크인</span>
-                    <span class="value">15:00</span>
-                  </div>
-                  <div class="point">
-                    <span class="label">체크아웃</span>
-                    <span class="value">11:00</span>
+                    <span class="label">체크인/아웃</span>
+                    <span class="value">15:00 / 11:00</span>
                   </div>
                 </div>
                 <div class="room-footer">
                   <div class="price-box">
-                    <span class="price-label">숙박 (1박 기준)</span>
-                    <span class="amount">₩{{ room.basePrice.toLocaleString() }}</span>
+                    <div class="nightly-price">
+                      <span class="price-label">1박 요금</span>
+                      <span class="amount">₩{{ room.basePrice.toLocaleString() }}</span>
+                    </div>
+                    <div class="monthly-special" v-if="room.monthlyPrice">
+                      <span class="badge" v-if="room.badgeText">{{ room.badgeText }}</span>
+                      <div class="price-detail">
+                        <span class="label">한달살기 최저가</span>
+                        <span class="amount">₩{{ room.monthlyPrice.toLocaleString() }}원</span>
+                      </div>
+                    </div>
                   </div>
                   <button class="select-btn" @click="startBooking(room)">예약하기</button>
                 </div>
@@ -113,22 +129,13 @@
         <section id="description" class="section description-section">
           <h2 class="section-title">숙소 정보</h2>
           <div class="html-content" v-html="formattedDescription"></div>
-          
-          <div class="usage-guide">
-            <h3>이용 안내</h3>
-            <ul>
-              <li>입실 시간 : 오후 3시 이후 / 퇴실 시간 : 오전 11시 이전</li>
-              <li>반려동물 동반 시 사전 문의 및 추가 요금이 발생할 수 있습니다.</li>
-              <li>전 객실 금연 구역입니다.</li>
-            </ul>
-          </div>
         </section>
 
         <hr class="divider" />
 
         <!-- 7. Location -->
         <section id="location" class="section map-section">
-          <h2 class="section-title">위치 안내</h2>
+          <h2 class="section-title">위치</h2>
           <p class="map-address">{{ stay.address }}</p>
           <div id="map" class="kakao-map"></div>
         </section>
@@ -138,32 +145,89 @@
       <aside class="sidebar-wrapper">
         <div class="sticky-sidebar">
           <div class="reservation-card">
-            <h3>방문 일정 선택</h3>
-            <div class="date-selector">
-              <div class="date-group">
-                <label>체크인</label>
-                <input type="date" v-model="checkInDate" />
+            <div class="card-header">
+              <div class="price-info">
+                <template v-if="calculatedPricing">
+                  <div class="final-price-main">
+                    <span class="price">{{ calculatedPricing.display.formattedFinalPrice }}</span>
+                    <span class="unit"> / {{ totalNights }}박</span>
+                  </div>
+                  <div class="discount-badge-row" v-if="calculatedPricing.display.badgeText">
+                    <span class="badge">{{ calculatedPricing.display.badgeText }}</span>
+                  </div>
+                </template>
+                <template v-else>
+                  <span class="price">₩{{ minPrice.toLocaleString() }}</span>
+                  <span class="unit"> / 박</span>
+                </template>
               </div>
-              <div class="date-group">
-                <label>체크아웃</label>
-                <input type="date" v-model="checkOutDate" />
+              <div class="rating-info">
+                <span class="star">★</span>
+                <span class="score">{{ stay.rating }}</span>
+                <span class="count"> · 리뷰 128개</span>
               </div>
             </div>
-            <div class="price-summary">
-              <div class="total-row">
-                <span>최저가</span>
-                <span class="amount">₩{{ minPrice.toLocaleString() }}~</span>
+
+            <div class="booking-inputs">
+              <div class="date-row" @click="showDatePicker = true">
+                <div class="input-item checkin">
+                  <label>체크인</label>
+                  <div class="value">{{ checkInDate }}</div>
+                </div>
+                <div class="input-item checkout">
+                  <label>체크아웃</label>
+                  <div class="value">{{ checkOutDate }}</div>
+                </div>
+              </div>
+              <div class="guest-row">
+                <label>인원</label>
+                <div class="guest-selector">게스트 2명</div>
               </div>
             </div>
-            <button class="primary-btn" @click="scrollToTab('rooms')">객실 확인하기</button>
+
+            <button class="reserve-btn" @click="scrollToTab('rooms')">객실 확인하기</button>
+            <p class="price-notice">{{ calculatedPricing?.display?.discountNotice || '예약 확정 전에는 요금이 청구되지 않습니다.' }}</p>
+
+            <div class="price-breakdown">
+              <template v-if="calculatedPricing">
+                <div class="row">
+                  <span class="label">기본 요금 합계</span>
+                  <span class="val">₩{{ calculatedPricing.pricing.totalOriginalPrice.toLocaleString() }}</span>
+                </div>
+                <div class="row discount-row" v-if="calculatedPricing.pricing.totalDiscountAmount > 0">
+                  <span class="label">연박 할인 ({{ calculatedPricing.pricing.totalDiscountRate }}%)</span>
+                  <span class="val">-₩{{ calculatedPricing.pricing.totalDiscountAmount.toLocaleString() }}</span>
+                </div>
+                <div class="row service-fee">
+                  <span class="label">서비스 수수료</span>
+                  <span class="val">₩0</span>
+                </div>
+                <hr />
+                <div class="row total">
+                  <span class="label">총 합계</span>
+                  <span class="val">₩{{ calculatedPricing.pricing.finalTotalPrice.toLocaleString() }}</span>
+                </div>
+              </template>
+              <template v-else>
+                <div class="row">
+                  <span class="label">₩{{ minPrice.toLocaleString() }} x {{ totalNights }}박</span>
+                  <span class="val">₩{{ (minPrice * totalNights).toLocaleString() }}</span>
+                </div>
+                <div class="row service-fee">
+                  <span class="label">서비스 수수료</span>
+                  <span class="val">₩0</span>
+                </div>
+                <hr />
+                <div class="row total">
+                  <span class="label">총 합계</span>
+                  <span class="val">₩{{ (minPrice * totalNights).toLocaleString() }}</span>
+                </div>
+              </template>
+            </div>
           </div>
           
-          <div class="host-profile">
-            <div class="avatar">H</div>
-            <div class="info">
-              <p class="host-name">호스트: {{ stay.hostName }}님</p>
-              <button class="contact-btn">호스트에게 문의</button>
-            </div>
+          <div class="report-box">
+             <span class="icon">🏳️</span> 숙소 신고하기
           </div>
         </div>
       </aside>
@@ -172,10 +236,20 @@
     <!-- 8. Mobile Bottom Bar -->
     <div class="mobile-bottom-bar">
       <div class="m-price-info">
-        <span class="label">1박 최저가</span>
-        <span class="amount">₩{{ minPrice.toLocaleString() }}~</span>
+        <span class="amount">₩{{ (minPrice * totalNights).toLocaleString() }}</span>
+        <span class="unit">/ {{ totalNights }}박</span>
       </div>
       <button class="m-book-btn" @click="scrollToTab('rooms')">객실 선택</button>
+    </div>
+
+    <!-- 9. Date Picker Overlay -->
+    <div v-if="showDatePicker" class="datepicker-overlay" @click.self="showDatePicker = false">
+      <DateRangePicker 
+        :initial-check-in="checkInDate" 
+        :initial-check-out="checkOutDate"
+        @change="onDateChange"
+        @close="showDatePicker = false"
+      />
     </div>
   </div>
 
@@ -186,7 +260,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useApi } from '~/composables/useApi'
 
 // TypeScript declaration for Kakao Maps
@@ -204,6 +278,9 @@ interface RoomDetail {
   basePrice: number
   capacity: number
   imageUrls: string[]
+  monthlyPrice?: number
+  discountRate?: number
+  badgeText?: string
 }
 
 interface StayDetail {
@@ -229,13 +306,25 @@ const { data: stay, pending } = await useApi<StayDetail>(`/api/v1/stays/${stayNo
 
 // Tabs configuration
 const tabs = [
+  { id: 'info', label: '개요' },
   { id: 'rooms', label: '객실선택' },
-  { id: 'description', label: '숙소안내' },
-  { id: 'location', label: '위치' },
-  { id: 'reviews', label: '리뷰' }
+  { id: 'description', label: '설명' },
+  { id: 'location', label: '위치' }
 ]
-const activeTab = ref('rooms')
+const activeTab = ref('info')
 const isSticky = ref(false)
+const showDatePicker = ref(false)
+const totalNights = ref(1)
+
+// Dates
+const checkInDate = ref(new Date().toISOString().split('T')[0])
+const checkOutDate = ref(new Date(Date.now() + 86400000).toISOString().split('T')[0])
+
+const onDateChange = (data: { checkIn: string, checkOut: string, nights: number }) => {
+  if (data.checkIn) checkInDate.value = data.checkIn
+  if (data.checkOut) checkOutDate.value = data.checkOut
+  if (data.nights) totalNights.value = data.nights
+}
 
 // Amenities dummy data
 const amenities = [
@@ -246,6 +335,61 @@ const amenities = [
   { name: '세탁기', icon: '🧺' },
   { name: 'TV', icon: '📺' }
 ]
+
+// New pricing interfaces for dynamic calculation
+interface PricingDetail {
+  nightlyBasePrice: number
+  totalNights: number
+  totalOriginalPrice: number
+  finalTotalPrice: number
+  totalDiscountAmount: number
+  totalDiscountRate: number
+  pricePerNightDiscounted: number
+}
+
+interface DisplayInfo {
+  badgeText: string | null
+  discountNotice: string | null
+  isLongStayDiscount: boolean
+  formattedOriginalPrice: string
+  formattedFinalPrice: string
+}
+
+interface PriceCalculationResponse {
+  pricing: PricingDetail
+  display: DisplayInfo
+  appliedPolicies: any[]
+}
+
+const calculatedPricing = ref<PriceCalculationResponse | null>(null)
+
+const calculateBestPrice = async () => {
+  if (!stay.value || stay.value.rooms.length === 0) return
+  
+  const cheapestRoom = stay.value.rooms.reduce((prev, curr) => 
+    prev.basePrice < curr.basePrice ? prev : curr
+  )
+  
+  try {
+    const response = await $fetch<PriceCalculationResponse>(
+      `/api/v1/rooms/${cheapestRoom.roomNo}/calculate-price`,
+      {
+        method: 'POST',
+        body: {
+          checkInDate: checkInDate.value,
+          checkOutDate: checkOutDate.value
+        }
+      }
+    )
+    calculatedPricing.value = response
+  } catch (e) {
+    console.error('Price calculation failed', e)
+  }
+}
+
+watch([checkInDate, checkOutDate, stay], () => {
+  calculateBestPrice()
+}, { immediate: true })
 
 // Computed
 const minPrice = computed(() => {
@@ -260,15 +404,16 @@ const formattedDescription = computed(() => {
 
 // Scroll handlers
 const handleScroll = () => {
-  isSticky.value = window.scrollY > 500
+  isSticky.value = window.scrollY > 550
   
   const sections = ['info', 'rooms', 'description', 'location']
   for (const sectionId of sections) {
     const el = document.getElementById(sectionId)
     if (el) {
       const rect = el.getBoundingClientRect()
-      if (rect.top <= 150 && rect.bottom >= 150) {
-        activeTab.value = sectionId === 'info' ? 'rooms' : sectionId
+      // Use offset to trigger active state earlier
+      if (rect.top <= 140 && rect.bottom >= 140) {
+        activeTab.value = sectionId
         break
       }
     }
@@ -278,13 +423,10 @@ const handleScroll = () => {
 const scrollToTab = (tabId: string) => {
   const el = document.getElementById(tabId)
   if (el) {
-    const top = el.offsetTop - 120
+    const top = el.offsetTop - 100
     window.scrollTo({ top, behavior: 'smooth' })
   }
 }
-
-const checkInDate = ref(new Date().toISOString().split('T')[0])
-const checkOutDate = ref(new Date(Date.now() + 86400000).toISOString().split('T')[0])
 
 const startBooking = (room: RoomDetail) => {
   router.push({
@@ -306,7 +448,6 @@ const initMap = () => {
   
   const container = document.getElementById('map')
   
-  // Use coordinates if available, otherwise default to a known location
   const centerPosition = stay.value.latitude && stay.value.longitude 
     ? new window.kakao.maps.LatLng(stay.value.latitude, stay.value.longitude)
     : new window.kakao.maps.LatLng(33.450701, 126.570667)
@@ -318,13 +459,11 @@ const initMap = () => {
   const map = new window.kakao.maps.Map(container, options)
   
   if (stay.value.latitude && stay.value.longitude) {
-    // If we have coordinates, just add the marker
     new window.kakao.maps.Marker({
       map: map,
       position: centerPosition
     })
   } else {
-    // Fallback to Geocoding if coordinates are missing
     const geocoder = new window.kakao.maps.services.Geocoder()
     geocoder.addressSearch(stay.value.address, (result: any[], status: string) => {
       if (status === window.kakao.maps.services.Status.OK) {
@@ -338,6 +477,12 @@ const initMap = () => {
       }
     })
   }
+
+  // Ensure map fits container
+  setTimeout(() => {
+    map.relayout()
+    map.setCenter(centerPosition)
+  }, 100)
 }
 
 onMounted(() => {
@@ -345,7 +490,7 @@ onMounted(() => {
   
   if (!window.kakao) {
     const script = document.createElement('script')
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=bbce3c69d524c8f1dfec521842c8608d&libraries=services&autoload=false`
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=7a651a84732bad2cb8d0025c67e0385a&libraries=services&autoload=false`
     script.onload = () => {
       window.kakao.maps.load(initMap)
     }
@@ -361,84 +506,87 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-// Design System Variables
-$primary-color: #7575ff;
-$secondary-color: #8496ba;
-$text-dark: #1a1a1a;
-$text-light: #666;
-$bg-faded: #f8faff;
-$border-color: #eee;
-$shadow-soft: 0 4px 20px rgba(0,0,0,0.08);
+$primary-color: #7575ff; // 기존 브랜드 블루
+$text-dark: #222222;
+$text-light: #717171;
+$border-color: #DDDDDD;
+$shadow: 0 6px 16px rgba(0,0,0,0.12);
 
 .detail-page {
   background: white;
   padding-bottom: 80px;
+  color: $text-dark;
+  font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 24px;
 }
 
-// 1. Hero Image Section
+// 1. Image Grid
 .hero-section {
-  padding: 24px 0;
+  padding-top: 24px;
   .image-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 12px;
-    height: 500px;
-    border-radius: 16px;
+    gap: 8px;
+    height: 480px;
+    border-radius: 12px;
     overflow: hidden;
-    position: relative;
-
+    
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       cursor: pointer;
-      transition: transform 0.4s ease, filter 0.3s;
-      &:hover {
-        transform: scale(1.02);
-        filter: brightness(0.9);
-      }
+      transition: filter 0.3s;
+      &:hover { filter: brightness(0.85); }
     }
 
-    .sub-images {
+    .grid-main { height: 100%; }
+    .grid-sub {
       display: grid;
+      grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
-      gap: 12px;
+      gap: 8px;
       position: relative;
     }
 
     .view-all-btn {
       position: absolute;
-      right: 20px;
-      bottom: 20px;
+      right: 24px;
+      bottom: 24px;
       background: white;
       border: 1px solid $text-dark;
-      padding: 8px 16px;
+      padding: 7px 15px;
       border-radius: 8px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: $shadow-soft;
-      &:hover { background: #f5f5f5; }
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      &:hover { background: #f7f7f7; }
     }
   }
 }
 
-// 2. Sticky Tab Navigation
+// 2. Sticky Tab Nav
 .sticky-tabs {
   background: white;
-  border-bottom: 1px solid $border-color;
   z-index: 100;
   position: sticky;
   top: 0;
-  transition: box-shadow 0.3s;
+  border-bottom: 1px solid transparent;
 
   &.is-sticky {
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-bottom: 1px solid $border-color;
+  }
+
+  .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .tabs {
@@ -448,382 +596,185 @@ $shadow-soft: 0 4px 20px rgba(0,0,0,0.08);
     margin: 0;
 
     li {
-      padding: 20px 24px;
+      padding: 24px 0;
+      margin-right: 24px;
       font-weight: 600;
-      color: $secondary-color;
+      font-size: 14px;
+      color: $text-dark;
       cursor: pointer;
-      border-bottom: 3px solid transparent;
+      border-bottom: 4px solid transparent;
       transition: all 0.2s;
 
-      &:hover { color: $primary-color; }
+      &:hover { color: black; }
       &.active {
-        color: $primary-color;
-        border-bottom-color: $primary-color;
+        border-bottom-color: black;
       }
     }
   }
 
-  .sticky-price-info {
+  .sticky-cta {
     display: flex;
     align-items: center;
     gap: 16px;
-    .price {
-      font-weight: 800;
-      font-size: 1.2rem;
+    .cta-info {
+      text-align: left;
+      .price-row {
+        .label { font-size: 14px; font-weight: 600; margin-right: 4px; }
+        .amount { font-weight: 800; font-size: 18px; text-decoration: underline; }
+      }
+      .rating-row {
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        margin-top: 2px;
+        font-weight: 600;
+        .star { font-size: 10px; margin-right: 2px; }
+        .count { color: $text-light; font-weight: 400; margin-left: 2px; }
+      }
     }
     .book-now-btn {
       background: $primary-color;
       color: white;
       border: none;
-      padding: 10px 24px;
-      border-radius: 8px;
+      padding: 12px 32px;
+      border-radius: 999px;
       font-weight: 700;
+      font-size: 16px;
       cursor: pointer;
+      transition: all 0.2s;
+      &:hover { background: darken($primary-color, 10%); transform: scale(1.02); }
     }
   }
 }
 
-// 3. Layout Structure
+// 3. Layout
 .content-layout {
   display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 60px;
-  margin-top: 40px;
+  grid-template-columns: 1fr 340px;
+  gap: 80px;
+  margin-top: 32px;
 
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
+    gap: 48px;
   }
 }
 
-.section {
-  padding: 40px 0;
-}
+.section { padding: 48px 0; }
+.section-title { font-size: 22px; font-weight: 700; margin-bottom: 24px; }
+.divider { border: none; border-top: 1px solid $border-color; margin: 0; }
 
-.section-title {
-  font-size: 1.6rem;
-  font-weight: 800;
-  margin-bottom: 24px;
-  color: $text-dark;
-}
-
-.divider {
-  border: none;
-  border-top: 1px solid $border-color;
-  margin: 0;
-}
-
-// 4. Header Section
+// Header
 .stay-header-section {
-  .header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-
-  .category-chip {
-    background: $bg-faded;
-    color: $primary-color;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-  }
-
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .category-chip { font-weight: 600; font-size: 14px; }
   .rating-box {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    .star { color: #ffb400; font-size: 1.1rem; }
-    .score { font-weight: 800; font-size: 1rem; }
-    .count { color: $text-light; font-size: 0.9rem; }
+    display: flex; align-items: center; gap: 4px; font-size: 14px;
+    .star { color: black; }
+    .score { font-weight: 600; }
+    .count { color: $text-light; }
   }
-
-  .stay-title {
-    font-size: 2.4rem;
-    font-weight: 900;
-    margin-bottom: 12px;
-    letter-spacing: -1px;
-  }
-
-  .address {
-    font-size: 1.1rem;
-    color: $text-light;
-    margin-bottom: 20px;
-    .map-link {
-      color: $primary-color;
-      text-decoration: underline;
-      margin-left: 12px;
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-  }
-
+  .stay-title { font-size: 32px; font-weight: 700; margin-bottom: 12px; line-height: 1.1; }
+  .address-row { font-size: 16px; font-weight: 600; text-decoration: underline; margin-bottom: 24px; }
+  
   .tags-row {
-    display: flex;
-    gap: 10px;
-    .tag {
-      color: $secondary-color;
-      font-size: 0.9rem;
-      background: #f1f3f7;
-      padding: 6px 12px;
-      border-radius: 4px;
-    }
+    display: flex; flex-wrap: wrap; gap: 8px;
+    .tag { font-size: 13px; color: $text-light; border: 1px solid #ddd; padding: 4px 10px; border-radius: 100px; }
   }
 }
 
-// 5. Amenities
+// Amino
 .amenity-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  
-  .amenity-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    .icon { font-size: 1.4rem; }
-    .name { color: #444; font-size: 1rem; }
-  }
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  .amenity-item { display: flex; align-items: center; gap: 16px; font-size: 16px; .icon { font-size: 20px; } }
 }
 
-// 6. Room Selection
-.room-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
+// Rooms
 .room-card {
-  display: flex;
-  border: 1px solid $border-color;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
-  
-  &:hover {
-    box-shadow: $shadow-soft;
-    border-color: $primary-color;
-  }
-
-  .room-image {
-    width: 280px;
-    height: 220px;
-    flex-shrink: 0;
-    position: relative;
-    img { width: 100%; height: 100%; object-fit: cover; }
-    .capacity-tag {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      background: rgba(0,0,0,0.6);
-      color: white;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-    }
-  }
-
-  .room-details {
-    flex: 1;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-
-    h3 { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
-    .room-desc { color: $text-light; font-size: 0.95rem; margin-bottom: 16px; }
-
-    .room-info-points {
-      display: flex;
-      gap: 30px;
-      margin-bottom: auto;
-      .point {
-        display: flex;
-        flex-direction: column;
-        .label { font-size: 0.75rem; color: $secondary-color; margin-bottom: 2px; }
-        .value { font-weight: 700; font-size: 0.95rem; }
-      }
-    }
-
-    .room-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-top: 20px;
-
-      .price-box {
-        .price-label { display: block; font-size: 0.85rem; color: $text-light; margin-bottom: 4px; }
-        .amount { font-size: 1.5rem; font-weight: 900; color: $primary-color; }
-      }
-
-      .select-btn {
-        background: $primary-color;
-        color: white;
-        border: none;
-        padding: 12px 32px;
-        border-radius: 8px;
-        font-weight: 800;
-        cursor: pointer;
-        transition: background 0.2s;
-        &:hover { background: #5a5aff; }
-      }
-    }
-  }
-
-  @media (max-width: 640px) {
-    flex-direction: column;
-    .room-image { width: 100%; height: 200px; }
-  }
+  display: flex; border: 1px solid $border-color; border-radius: 12px; margin-bottom: 16px; overflow: hidden;
+  &:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+  .room-image { width: 220px; height: 180px; position: relative; img { width: 100%; height: 100%; object-fit: cover; } }
+  .room-details { flex: 1; padding: 20px; display: flex; flex-direction: column; }
+  .room-header h3 { font-size: 18px; margin-bottom: 4px; }
+  .room-desc { font-size: 14px; color: $text-light; margin-bottom: 12px; }
+  .room-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; }
+  .amount { font-size: 18px; font-weight: 800; }
+  .select-btn { background: $text-dark; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
 }
 
-// 7. Sidebar
-.sidebar-wrapper {
-  .sticky-sidebar {
-    position: sticky;
-    top: 100px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .reservation-card {
-    background: white;
+// Map
+.map-section {
+  .kakao-map {
+    width: 100%;
+    height: 480px;
+    border-radius: 12px;
+    background: #f7f7f7;
+    margin-top: 16px;
     border: 1px solid $border-color;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: $shadow-soft;
-
-    h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; }
-
-    .date-selector {
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-
-      .date-group {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        label { font-size: 0.75rem; color: $secondary-color; font-weight: 700; }
-        input {
-          border: none;
-          font-size: 0.95rem;
-          font-weight: 600;
-          color: #333;
-          outline: none;
-          background: transparent;
-          cursor: pointer;
-        }
-      }
-    }
-
-    .price-summary {
-      padding-top: 16px;
-      border-top: 1px solid $border-color;
-      margin-bottom: 20px;
-      .total-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        span { font-weight: 700; color: $text-light; }
-        .amount { font-size: 1.4rem; color: $text-dark; font-weight: 900; }
-      }
-    }
-
-    .primary-btn {
-      width: 100%;
-      background: $primary-color;
-      color: white;
-      border: none;
-      padding: 16px;
-      border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: 800;
-      cursor: pointer;
-      &:hover { opacity: 0.9; }
-    }
   }
+}
 
-  .host-profile {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 20px;
-    background: $bg-faded;
-    border-radius: 16px;
+// Sidebar
+.sidebar-wrapper {
+  .sticky-sidebar { position: sticky; top: 110px; }
+  .reservation-card {
+    border: 1px solid $border-color; border-radius: 12px; padding: 24px; box-shadow: $shadow;
+    .card-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+    .price { font-size: 22px; font-weight: 700; }
+    .unit { font-size: 16px; color: #444; }
+    .rating-info { font-size: 14px; .star { font-size: 12px; } .score { font-weight: 600; } }
 
-    .avatar {
-      width: 48px;
-      height: 48px;
-      background: $primary-color;
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 1.2rem;
+    .booking-inputs {
+      border: 1px solid #B0B0B0; border-radius: 8px; margin-bottom: 16px;
+      .date-row { display: flex; border-bottom: 1px solid #B0B0B0; cursor: pointer; }
+      .input-item { flex: 1; padding: 10px 12px; &.checkin { border-right: 1px solid #B0B0B0; } }
+      label { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+      .value { font-size: 14px; padding-top: 2px; }
+      .guest-row { padding: 10px 12px; label { margin-bottom: 2px; } .guest-selector { font-size: 14px; } }
     }
 
-    .host-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
-    .contact-btn {
-      border: none;
-      background: none;
-      color: $primary-color;
-      padding: 0;
-      font-weight: 700;
-      font-size: 0.85rem;
-      text-decoration: underline;
-      cursor: pointer;
+    .reserve-btn {
+      width: 100%; 
+      background: $primary-color;
+      color: white; 
+      border: none; 
+      padding: 14px; 
+      border-radius: 8px; 
+      font-size: 16px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      margin-bottom: 8px;
+      transition: background 0.2s;
+      &:hover { background: darken($primary-color, 10%); }
+    }
+    .price-notice { font-size: 14px; text-align: center; color: $text-light; margin-bottom: 24px; }
+
+    .price-breakdown {
+      .row { display: flex; justify-content: space-between; font-size: 16px; margin-bottom: 12px; 
+        .label { text-decoration: underline; color: $text-light; }
+      }
+      hr { border: none; border-top: 1px solid $border-color; margin: 16px 0; }
+      .total { font-weight: 700; .label { text-decoration: none; color: black; } }
     }
   }
 }
 
-// 8. Map
-.kakao-map {
-  width: 100%;
-  height: 400px;
-  background: #f1f1f1;
-  border-radius: 12px;
-  margin-top: 16px;
-}
+.report-box { margin-top: 24px; text-align: center; font-size: 14px; color: $text-light; cursor: pointer; text-decoration: underline; font-weight: 500; }
 
-// 9. Mobile Elements
+// Mobile
 .mobile-bottom-bar {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  padding: 16px 20px;
-  border-top: 1px solid $border-color;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 1000;
+  display: none; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid $border-color; padding: 16px 24px;
+  justify-content: space-between; align-items: center; z-index: 101;
+  .amount { font-size: 18px; font-weight: 800; }
+  .m-book-btn { background: $primary-color; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; }
+  
+  @media (max-width: 1024px) { display: flex; }
+}
 
-  @media (max-width: 1024px) {
-    display: flex;
-  }
-
-  .m-price-info {
-    .label { font-size: 0.75rem; color: $text-light; display: block; }
-    .amount { font-size: 1.2rem; font-weight: 800; color: $text-dark; }
-  }
-
-  .m-book-btn {
-    background: $primary-color;
-    color: white;
-    border: none;
-    padding: 12px 32px;
-    border-radius: 8px;
-    font-weight: 800;
-    font-size: 1rem;
-  }
+@media (max-width: 768px) {
+  .hero-section .image-grid { grid-template-columns: 1fr; .grid-sub { display: none; } }
+  .stay-header-section .stay-title { font-size: 26px; }
+  .amenity-grid { grid-template-columns: 1fr; }
 }
 
 // Loading state
@@ -841,9 +792,57 @@ $shadow-soft: 0 4px 20px rgba(0,0,0,0.08);
     animation: rotation 1s linear infinite;
   }
 }
+// Picker Overlay
+.datepicker-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2000;
+}
 
 @keyframes rotation {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+// Additional Pricing Styles
+.final-price-main { display: flex; align-items: baseline; gap: 4px; }
+.discount-badge-row {
+  margin-top: 4px;
+  .badge {
+    background: #ff385c;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 800;
+  }
+}
+
+.discount-row {
+  .val { color: #ff385c; font-weight: 600; }
+}
+
+.monthly-special {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+
+  .badge {
+    background: #008489;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .price-detail {
+    text-align: right;
+    .label { font-size: 11px; color: #717171; display: block; }
+    .amount { font-size: 16px; font-weight: 800; color: #222; }
+  }
 }
 </style>

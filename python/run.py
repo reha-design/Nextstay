@@ -107,10 +107,21 @@ def main():
 
         print("\n" + "-"*40)
         # strip()을 추가하여 " y" 띄어쓰기 실수 등도 방지하고, lower()로 대소문자 모두 'y'로 치환
-        choice = input("다시 시작하시겠습니까? (Y/N): ").strip().lower()
+        try:
+            choice = input("다시 시작하시겠습니까? (Y/N): ").strip().lower()
+        except EOFError:
+            break
+            
         if choice != 'y':
             print("프로그램을 종료합니다.")
             break
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\n" + "="*40)
+        print("사용자에 의해 프로그램이 중단되었습니다.")
+        print("백엔드 및 프론트엔드 창은 별도로 열려있을 수 있습니다.")
+        print("="*40)
+        sys.exit(0)

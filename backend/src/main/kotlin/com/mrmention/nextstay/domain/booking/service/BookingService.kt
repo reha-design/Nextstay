@@ -71,7 +71,7 @@ class BookingService(
             room = room,
             checkInDate = request.checkInDate,
             checkOutDate = request.checkOutDate,
-            totalPrice = priceInfo.finalTotalPrice, // Booking 엔티티의 totalPrice가 Long으로 변경됨
+            totalPrice = priceInfo.pricing.finalTotalPrice, // Booking 엔티티의 totalPrice가 Long으로 변경됨
             status = BookingStatus.CONFIRMED // 이번 시뮬레이션에서는 즉시 확정으로 처리
         )
 
