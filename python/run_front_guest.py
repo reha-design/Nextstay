@@ -18,15 +18,19 @@ def main():
     
     url = "http://localhost:3000"
 
-    print("[대기] 기존 서버(localhost:3000)가 켜져 있는지 확인합니다...")
     import urllib.request
     from urllib.error import URLError, HTTPError
+    import socket
+
+    print(f"[대기] 기존 서버({url})가 켜져 있는지 확인합니다...")
 
     try:
-        # 기존 서버가 정상적으로 응답하는지 확인
-        urllib.request.urlopen(url, timeout=1)
-        print("[확인] 포트 3000번이 이미 사용 중입니다. 브라우저를 추가로 띄우지 않습니다.")
-    except (URLError, HTTPError):
+        # 기존 서버가 정상적으로 응답하는지 확인 (짧은 타임아웃)
+        with urllib.request.urlopen(url, timeout=0.5) as response:
+            if response.getcode() == 200:
+                print("[확인] 포트 3000번이 이미 사용 중입니다. 브라우저를 추가로 띄우지 않습니다.")
+                return
+    except (URLError, HTTPError, socket.timeout, TimeoutError):
         # 기존 서버가 없으면 새로 띄운 서버 기동을 기다림
         print("\n[대기] 새 서버가 기동될 때까지 잠시 기다립니다 (5초)...")
         time.sleep(5)

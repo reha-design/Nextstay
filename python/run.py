@@ -13,6 +13,7 @@ if script_dir not in sys.path:
     sys.path.append(script_dir)
 
 import run_front_guest # 초기 임포트
+import run_analytics
 
 def kill_process_on_port(port):
     """지정한 포트를 사용 중인 프로세스를 찾아 종료합니다."""
@@ -50,6 +51,30 @@ def kill_process_on_port(port):
     except Exception as e:
         print(f"[경고] 프로세스 확인 중 예외 발생: {e}")
 
+def check_and_run_docker(root_dir):
+    """도커 컨테이너가 실행 중인지 확인하고, 실행 중이지 않으면 시작합니다."""
+    print("\n[1/3] 도커 컨테이너 상태를 확인합니다...")
+    try:
+        # 실행 중인 컨테이너 이름 목록을 가져옵니다.
+        result = subprocess.check_output("docker ps --format \"{{.Names}}\"", shell=True, text=True)
+        running_containers = [c.strip() for c in result.strip().split('\n') if c.strip()]
+        
+        required_containers = ["nextstay-mysql", "nextstay-rabbitmq"]
+        missing = [c for c in required_containers if c not in running_containers]
+        
+        if not missing:
+            print("[확인] 모든 필수 컨테이너(MySQL, RabbitMQ)가 이미 가동 중입니다.")
+        else:
+            print(f"[알림] 실행 중이지 않은 컨테이너 발견: {', '.join(missing)}")
+            print("       >> docker-compose up -d 실행 중...")
+            subprocess.run("docker-compose up -d", shell=True, cwd=root_dir, capture_output=True)
+            print("[완료] 컨테이너가 성공적으로 시작되었습니다.")
+            time.sleep(2)
+    except Exception as e:
+        print(f"[경고] 도커 상태 확인 중 예외 발생: {e}")
+        print("       >> docker-compose up -d 를 강제로 시도합니다...")
+        subprocess.run("docker-compose up -d", shell=True, cwd=root_dir)
+
 def main():
     # 현재 스크립트 파일(python/run.py)의 부모 경로(Nextstay 프로젝트 루트)를 기준으로 설정
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -66,10 +91,8 @@ def main():
         subprocess.run('taskkill /FI "WINDOWTITLE eq 넥스트스테이-백엔드*" /T /F', shell=True, capture_output=True)
         kill_process_on_port(8080)
 
-        # 1. 도커 MySQL 컨테이너 확인 및 실행
-        print("\n[1/3] 도커 MySQL 상태를 확인하고 실행합니다...")
-        subprocess.run("docker-compose up -d", shell=True, cwd=root_dir)
-        time.sleep(1)
+        # 1. 도커 컨테이너 확인 및 실행
+        check_and_run_docker(root_dir)
 
         # 2. 백엔드 실행
         print("\n[2/3] 백엔드 서버를 시작합니다...")
@@ -98,10 +121,15 @@ def main():
             webbrowser.open(swagger_url, new=2)
             
             # 4. 프론트엔드 서버 실행
-            print("\n[3/3] 이어서 프론트엔드(Guest) 서버를 구동합니다...")
+            print("\n[3/4] 이어서 프론트엔드(Guest) 서버를 구동합니다...")
             # 모듈이 이미 로드되어 있어도 최신 상태를 반영하기 위해 reload
             importlib.reload(run_front_guest)
             run_front_guest.main()
+            
+            # 5. 분석 서버 실행
+            print("\n[4/4] 마지막으로 분석(Analytics) 서버를 구동합니다...")
+            importlib.reload(run_analytics)
+            run_analytics.main()
         else:
             print("[실패] 백엔드 서버 응답이 없습니다. 컴파일 에러나 포트 충돌 여부를 별도의 백엔드 터미널 창에서 확인해주세요.")
 
