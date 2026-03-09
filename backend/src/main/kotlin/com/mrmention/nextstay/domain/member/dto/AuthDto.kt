@@ -46,3 +46,13 @@ data class SignupResponse(
     val name: String,
     val role: MemberRole
 )
+/**
+ * 현재 로그인된 사용자 정보 응답 DTO
+ */
+data class UserResponse(
+    val userNo: String,
+    val email: String,
+    val name: String,
+    val phone: String?,
+    val role: MemberRole
+)

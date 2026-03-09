@@ -54,15 +54,17 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
   middleware: ['guest']
 })
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const form = reactive({
   name: '',
@@ -88,7 +90,7 @@ const handleSignup = async () => {
   error.value = ''
   
   try {
-    const { error: fetchError } = await useFetch('http://localhost:8080/api/v1/auth/signup', {
+    const data = await $fetch('http://localhost:8080/api/v1/auth/signup', {
       method: 'POST',
       body: {
         role: form.role,
@@ -99,33 +101,34 @@ const handleSignup = async () => {
         phone: form.phone,
         termsAgreed: form.termsAgreed,
         marketingAgreed: form.marketingAgreed
-      }
+      },
+      credentials: 'include' // Cross-Origin 쿠키(Refresh Token) 수신 허용
     })
 
-    if (fetchError.value) {
-      if (fetchError.value.statusCode === 409) {
-        error.value = '이미 가입된 이메일입니다.'
-      } else if (fetchError.value.statusCode === 400) {
-        // 백엔드의 구체적인 Validation 에러 메시지를 표시
-        const dataStr = fetchError.value.data
-        if (typeof dataStr === 'object' && dataStr.message) {
-            error.value = dataStr.message
-        } else if (typeof dataStr === 'object' && Object.keys(dataStr).length > 0) {
-            // Validation error object
-            error.value = Object.values(dataStr)[0]
-        } else {
-            error.value = '입력 항목을 다시 확인해주세요.'
-        }
-      } else {
-        error.value = '회원가입 중 오류가 발생했습니다.'
-      }
-      return
+    if (data) {
+      alert('회원가입이 완료되었습니다! 로그인해 주세요.')
+      
+      const route = useRoute()
+      router.push({
+        path: '/login',
+        query: route.query
+      })
     }
-
-    alert('회원가입이 완료되었습니다. 로그인해주세요.')
-    router.push('/login')
-  } catch (err) {
-    error.value = '회원가입 요청 중 문제가 발생했습니다.'
+  } catch (err: any) {
+    if (err.status === 409) {
+      error.value = '이미 가입된 이메일입니다.'
+    } else if (err.status === 400) {
+      const dataStr = err.data
+      if (typeof dataStr === 'object' && dataStr.message) {
+          error.value = dataStr.message
+      } else if (typeof dataStr === 'object' && Object.keys(dataStr).length > 0) {
+          error.value = Object.values(dataStr)[0] as string
+      } else {
+          error.value = '입력 항목을 다시 확인해주세요.'
+      }
+    } else {
+      error.value = '회원가입 중 오류가 발생했습니다.'
+    }
   } finally {
     loading.value = false
   }

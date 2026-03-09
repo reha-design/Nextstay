@@ -42,6 +42,10 @@ const app = new Elysia()
   .post("/analytics/event", ({ body }) => {
     const { eventName, payload, timestamp } = body;
     
+    // 📢 서버 로그 출력
+    console.log(`[EVENT] 📊 ${eventName} | ${new Date().toLocaleTimeString()}`);
+    console.log(` > Payload: ${JSON.stringify(payload)}`);
+    
     db.run(
       "INSERT INTO event_logs (event_name, payload, timestamp) VALUES (?, ?, ?)",
       [eventName, JSON.stringify(payload), timestamp]
@@ -60,6 +64,10 @@ const app = new Elysia()
   .post("/stats/v1/visits", ({ body }) => {
     const { path, userId, userAgent } = body;
     
+    // 📢 방문 로그 출력
+    console.log(`[VISIT] 🏃 ${path} | User: ${userId || 'Guest'} | ${new Date().toLocaleTimeString()}`);
+    console.log(` > UA: ${userAgent.substring(0, 60)}${userAgent.length > 60 ? '...' : ''}`);
+
     db.run(
       "INSERT INTO visit_logs (path, user_id, user_agent) VALUES (?, ?, ?)",
       [path, userId || null, userAgent]

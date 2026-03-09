@@ -1,8 +1,10 @@
 package com.mrmention.nextstay.domain.member.service
 
-import com.mrmention.nextstay.domain.member.dto.AuthResponse
+import com.mrmention.nextstay.domain.member.dto.UserResponse
+import com.mrmention.nextstay.domain.member.dto.SignupResponse
 import com.mrmention.nextstay.domain.member.dto.LoginRequest
 import com.mrmention.nextstay.domain.member.dto.LoginResult
+import com.mrmention.nextstay.domain.member.dto.AuthResponse
 import com.mrmention.nextstay.domain.member.dto.SignupRequest
 import com.mrmention.nextstay.domain.member.entity.Member
 import com.mrmention.nextstay.domain.member.entity.MemberRole
@@ -116,6 +118,22 @@ class AuthService(
         )
 
         return LoginResult(authResponse, newRefreshToken)
+    }
+
+    /**
+     * 회원 번호로 회원 정보 조회
+     */
+    fun getMemberByUserNo(userNo: String): UserResponse {
+        val member = memberRepository.findByUserNo(userNo)
+            ?: throw InvalidCredentialsException("존재하지 않는 회원입니다.")
+
+        return UserResponse(
+            userNo = member.userNo,
+            email = member.email,
+            name = member.name,
+            phone = member.phone,
+            role = member.role
+        )
     }
 
     /**

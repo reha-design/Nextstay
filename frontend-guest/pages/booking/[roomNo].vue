@@ -39,7 +39,7 @@
             </div>
             <div class="info-item">
               <span class="label">숙박 기간</span>
-              <span class="value">{{ priceInfo?.totalNights }}박</span>
+              <span class="value">{{ priceInfo?.pricing?.totalNights || 0 }}박</span>
             </div>
           </div>
         </section>
@@ -84,17 +84,17 @@
           <h3 class="card-title">결제 상세</h3>
           <div class="price-rows">
             <div class="row">
-              <span class="label">객실 요금 ({{ priceInfo?.totalNights }}박)</span>
-              <span class="val">₩{{ priceInfo?.totalBasePrice?.toLocaleString() }}</span>
+              <span class="label">객실 요금 ({{ priceInfo?.pricing?.totalNights || 0 }}박)</span>
+              <span class="val">₩{{ priceInfo?.pricing?.totalOriginalPrice?.toLocaleString() }}</span>
             </div>
-            <div v-if="priceInfo?.discountAmount > 0" class="row discount">
+            <div v-if="priceInfo?.pricing?.totalDiscountAmount > 0" class="row discount">
               <span class="label">연박 할인</span>
-              <span class="val">-₩{{ priceInfo?.discountAmount?.toLocaleString() }}</span>
+              <span class="val">-₩{{ priceInfo?.pricing?.totalDiscountAmount?.toLocaleString() }}</span>
             </div>
             <hr />
             <div class="row total">
               <span class="label">최종 결제 금액</span>
-              <span class="val">₩{{ priceInfo?.finalTotalPrice?.toLocaleString() }}</span>
+              <span class="val">₩{{ priceInfo?.pricing?.finalTotalPrice?.toLocaleString() }}</span>
             </div>
           </div>
           
@@ -110,7 +110,7 @@
             :disabled="!agreed || submintting"
             @click="handleBooking"
           >
-            {{ submintting ? '처리 중...' : `₩${priceInfo?.finalTotalPrice?.toLocaleString()} 결제하기` }}
+            {{ submintting ? '처리 중...' : `₩${priceInfo?.pricing?.finalTotalPrice?.toLocaleString()} 결제하기` }}
           </button>
         </div>
       </aside>

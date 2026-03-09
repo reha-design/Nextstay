@@ -23,13 +23,13 @@
       </form>
       
       <div class="auth-footer">
-        계정이 없으신가요? <NuxtLink to="/signup">회원가입</NuxtLink>
+        계정이 없으신가요? <NuxtLink :to="{ path: '/signup', query: $route.query }">회원가입</NuxtLink>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
@@ -54,22 +54,14 @@ const handleLogin = async () => {
   error.value = ''
   
   try {
-    const { data, error: fetchError } = await useFetch('http://localhost:8080/api/v1/auth/login', {
+    const data = await $fetch('http://localhost:8080/api/v1/auth/login', {
       method: 'POST',
-      body: { email: form.email, password: form.password }
+      body: { email: form.email, password: form.password },
+      credentials: 'include'
     })
 
-    if (fetchError.value) {
-      if (fetchError.value.statusCode === 401) {
-        error.value = '이메일 또는 비밀번호가 올바르지 않습니다.'
-      } else {
-        error.value = fetchError.value.data?.message || '로그인 중 오류가 발생했습니다.'
-      }
-      return
-    }
-
-    if (data.value) {
-      const responseData = data.value
+    if (data) {
+      const responseData = data as any
       // Store token and user data in Pinia
       authStore.setAuth(responseData.accessToken, {
         userNo: responseData.userNo,
@@ -80,11 +72,15 @@ const handleLogin = async () => {
       })
       
       const route = useRoute()
-      const redirectPath = route.query.redirect || '/'
+      const redirectPath = (route.query.redirect as string) || '/'
       router.push(redirectPath)
     }
-  } catch (err) {
-    error.value = '로그인 요청 중 문제가 발생했습니다.'
+  } catch (err: any) {
+    if (err.status === 401) {
+      error.value = '이메일 또는 비밀번호가 올바르지 않습니다.'
+    } else {
+      error.value = err.data?.message || '로그인 중 오류가 발생했습니다.'
+    }
   } finally {
     loading.value = false
   }

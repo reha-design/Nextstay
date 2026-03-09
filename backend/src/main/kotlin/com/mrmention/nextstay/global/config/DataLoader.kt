@@ -56,7 +56,7 @@ class DataLoader(
         // 0. 시스템 가격 계수 초기화
         val coefficients = initPricingCoefficients()
 
-        // 1. 호스트 계정 생성
+        // 1. 호스트 및 게스트 계정 생성
         val host = Member(
             userNo = "m2603090001",
             email = "host@nextstay.com",
@@ -67,6 +67,17 @@ class DataLoader(
             termsAgreed = true
         )
         memberRepository.save(host)
+
+        val guest = Member(
+            userNo = "m2603107777",
+            email = "testguest@nextstay.com",
+            password = passwordEncoder.encode("password123"),
+            name = "테스트게스트",
+            phone = "010-9999-8888",
+            role = MemberRole.GUEST,
+            termsAgreed = true
+        )
+        memberRepository.save(guest)
 
         // 2. 숙소 데이터 30개 생성
         val citiesWithImages = listOf(

@@ -11,7 +11,7 @@ import { onMounted } from 'vue'
 const authStore = useAuthStore()
 
 onMounted(() => {
-  // Load token and user data from localStorage when app starts
-  authStore.loadAuth()
+  // Nuxt 3 useCookie reactivity handles this automatically.
+  // authStore.loadAuth() 
 })
 </script>

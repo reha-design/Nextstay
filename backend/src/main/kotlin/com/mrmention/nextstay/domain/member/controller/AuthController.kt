@@ -3,6 +3,7 @@ package com.mrmention.nextstay.domain.member.controller
 import com.mrmention.nextstay.domain.member.dto.AuthResponse
 import com.mrmention.nextstay.domain.member.dto.LoginRequest
 import com.mrmention.nextstay.domain.member.dto.LoginResult
+import com.mrmention.nextstay.domain.member.dto.SignupResponse
 import com.mrmention.nextstay.domain.member.dto.SignupRequest
 import com.mrmention.nextstay.domain.member.service.AuthService
 import io.swagger.v3.oas.annotations.Operation

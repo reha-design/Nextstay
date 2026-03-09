@@ -32,7 +32,7 @@
 
       <!-- Data State -->
       <div v-else class="room-grid">
-        <RoomCard 
+        <StayCard 
           v-for="stay in stays" 
           :key="stay.stayNo" 
           :stay="stay" 
@@ -46,7 +46,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useApi } from '~/composables/useApi'
-import RoomCard from '~/components/RoomCard.vue'
+import StayCard from '~/components/StayCard.vue'
 
 const router = useRouter()
 

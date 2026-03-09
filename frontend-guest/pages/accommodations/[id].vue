@@ -86,40 +86,12 @@
         <section id="rooms" class="section rooms-section">
           <h2 class="section-title">객실 선택</h2>
           <div class="room-cards">
-            <div v-for="room in stay.rooms" :key="room.roomNo" class="room-card">
-              <div class="room-image">
-                <img :src="room.imageUrls[0]" :alt="room.name" />
-                <span class="capacity-tag">최대 {{ room.capacity }}인</span>
-              </div>
-              <div class="room-details">
-                <div class="room-header">
-                  <h3>{{ room.name }}</h3>
-                  <p class="room-desc">{{ room.description }}</p>
-                </div>
-                <div class="room-info-points">
-                  <div class="point">
-                    <span class="label">체크인/아웃</span>
-                    <span class="value">15:00 / 11:00</span>
-                  </div>
-                </div>
-                <div class="room-footer">
-                  <div class="price-box">
-                    <div class="nightly-price">
-                      <span class="price-label">1박 요금</span>
-                      <span class="amount">₩{{ room.basePrice.toLocaleString() }}</span>
-                    </div>
-                    <div class="monthly-special" v-if="room.monthlyPrice">
-                      <span class="badge" v-if="room.badgeText">{{ room.badgeText }}</span>
-                      <div class="price-detail">
-                        <span class="label">한달살기 최저가</span>
-                        <span class="amount">₩{{ room.monthlyPrice.toLocaleString() }}원</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button class="select-btn" @click="startBooking(room)">예약하기</button>
-                </div>
-              </div>
-            </div>
+            <RoomCard 
+              v-for="room in stay.rooms" 
+              :key="room.roomNo" 
+              :room="room" 
+              @select="startBooking"
+            />
           </div>
         </section>
 
@@ -374,6 +346,7 @@ const calculateBestPrice = async () => {
     const response = await $fetch<PriceCalculationResponse>(
       `/api/v1/rooms/${cheapestRoom.roomNo}/calculate-price`,
       {
+        baseURL: 'http://localhost:8080',
         method: 'POST',
         body: {
           checkInDate: checkInDate.value,
@@ -689,17 +662,10 @@ $shadow: 0 6px 16px rgba(0,0,0,0.12);
   .amenity-item { display: flex; align-items: center; gap: 16px; font-size: 16px; .icon { font-size: 20px; } }
 }
 
-// Rooms
-.room-card {
-  display: flex; border: 1px solid $border-color; border-radius: 12px; margin-bottom: 16px; overflow: hidden;
-  &:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
-  .room-image { width: 220px; height: 180px; position: relative; img { width: 100%; height: 100%; object-fit: cover; } }
-  .room-details { flex: 1; padding: 20px; display: flex; flex-direction: column; }
-  .room-header h3 { font-size: 18px; margin-bottom: 4px; }
-  .room-desc { font-size: 14px; color: $text-light; margin-bottom: 12px; }
-  .room-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; }
-  .amount { font-size: 18px; font-weight: 800; }
-  .select-btn { background: $text-dark; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+// Rooms (Component Styles handle internal layout, only margin here)
+.room-cards {
+  display: flex;
+  flex-direction: column;
 }
 
 // Map

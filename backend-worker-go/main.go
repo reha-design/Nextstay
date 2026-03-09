@@ -35,7 +35,10 @@ func main() {
 		false,              // delete when unused
 		false,              // exclusive
 		false,              // no-wait
-		nil,                // arguments
+		amqp.Table{
+			"x-dead-letter-exchange":    "reservation.dlx",
+			"x-dead-letter-routing-key": "reservation.dead",
+		}, // arguments
 	)
 	failOnError(err, "Failed to declare a queue")
 
