@@ -28,9 +28,12 @@ class AuthController(
 
     @Operation(summary = "일반 이메일 회원가입", description = "이메일을 사용하여 새로운 계정을 생성합니다.")
     @PostMapping("/signup")
-    fun signup(@Valid @RequestBody request: SignupRequest): ResponseEntity<String> {
-        val userNo = authService.signup(request)
-        return ResponseEntity.status(HttpStatus.CREATED).body(userNo)
+    fun signup(
+        @Valid @RequestBody request: SignupRequest,
+        response: HttpServletResponse
+    ): ResponseEntity<SignupResponse> {
+        val result = authService.signup(request)
+        return ResponseEntity.status(HttpStatus.CREATED).body(result)
     }
 
     @Operation(summary = "일반 이메일 로그인", description = "이메일과 비밀번호로 로그인하여 JWT 토큰을 발급받고 HttpOnly 쿠키로 Refresh Token을 반환합니다.")
@@ -41,13 +44,13 @@ class AuthController(
     ): ResponseEntity<AuthResponse> {
         val result = authService.login(request)
         
-        // Refresh Token을 HttpOnly 쿠키로 설정 (Spring 5+ 권장인 ResponseCookie 사용)
+        // Refresh Token을 HttpOnly 쿠키로 설정
         val refreshCookie = ResponseCookie.from("refresh_token", result.refreshToken)
             .httpOnly(true)
-            .secure(false) // HTTPS에서는 true 권장, 로컬 개발을 위해 false
+            .secure(false) // 로컬 테스트용
             .path("/")
-            .maxAge(7 * 24 * 60 * 60) // 7일
-            .sameSite("Lax") // CSRF 방어
+            .maxAge(7 * 24 * 60 * 60)
+            .sameSite("Lax")
             .build()
             
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString())

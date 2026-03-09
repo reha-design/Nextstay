@@ -16,7 +16,7 @@ class RabbitMqConfig {
 
     companion object {
         const val RESERVATION_EXCHANGE = "reservation.exchange"
-        const val RESERVATION_QUEUE = "reservation.queue"
+        const val RESERVATION_QUEUE = "q.reservation.v1"
         const val RESERVATION_ROUTING_KEY = "reservation.created"
 
         // DLQ 설정 추가

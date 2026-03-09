@@ -31,7 +31,7 @@ class AuthService(
      * 회원 가입
      */
     @Transactional
-    fun signup(request: SignupRequest): String {
+    fun signup(request: SignupRequest): SignupResponse {
         if (memberRepository.findByEmail(request.email) != null) {
             throw AlreadyExistsException("이미 가입된 이메일입니다.")
         }
@@ -57,7 +57,13 @@ class AuthService(
         )
 
         val savedMember = memberRepository.save(member)
-        return savedMember.userNo
+        
+        return SignupResponse(
+            userNo = savedMember.userNo,
+            email = savedMember.email,
+            name = savedMember.name,
+            role = savedMember.role
+        )
     }
 
     /**

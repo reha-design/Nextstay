@@ -37,3 +37,12 @@ data class LoginResult(
     val authResponse: AuthResponse,
     val refreshToken: String
 )
+/**
+ * 회원가입 결과 응답 DTO (자동 로그인 미사용 시)
+ */
+data class SignupResponse(
+    val userNo: String,
+    val email: String,
+    val name: String,
+    val role: MemberRole
+)

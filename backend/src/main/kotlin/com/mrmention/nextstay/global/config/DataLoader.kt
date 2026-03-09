@@ -34,7 +34,16 @@ class DataLoader(
 
     @Transactional
     override fun run(vararg args: String?) {
+        // 이미 데이터가 존재한다면 초기화를 건너뜁니다.
+        if (memberRepository.count() > 0) {
+            println(">>> 데이터가 이미 존재합니다. 초기화 과정을 건너뜁니다.")
+            return
+        }
+
+        println(">>> 데이터가 존재하지 않습니다. 초기 데이터 생성을 시작합니다...")
+
         // 기존 데이터 초기화 (외래 키 제약 조건 고려)
+        // 사실 count() 체크로 건너뛰므로 아래 deleteAll은 비어있는 상태에서만 실행되거나 아예 실행되지 않아야 합니다.
         bookingRepository.deleteAll()
         roomDiscountMappingRepository.deleteAll()
         priceScheduleRepository.deleteAll()
