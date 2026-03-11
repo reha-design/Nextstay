@@ -8,6 +8,7 @@ import com.mrmention.nextstay.domain.member.dto.AuthResponse
 import com.mrmention.nextstay.domain.member.dto.SignupRequest
 import com.mrmention.nextstay.domain.member.entity.Member
 import com.mrmention.nextstay.domain.member.entity.MemberRole
+import com.mrmention.nextstay.domain.member.entity.OnboardingStatus
 import com.mrmention.nextstay.global.exception.AlreadyExistsException
 import com.mrmention.nextstay.global.exception.InvalidCredentialsException
 import com.mrmention.nextstay.domain.member.repository.MemberRepository
@@ -55,7 +56,8 @@ class AuthService(
             provider = request.provider,
             providerId = request.providerId,
             termsAgreed = request.termsAgreed,
-            marketingAgreed = request.marketingAgreed
+            marketingAgreed = request.marketingAgreed,
+            onboardingStatus = if (request.role == MemberRole.HOST) OnboardingStatus.PENDING else OnboardingStatus.NONE
         )
 
         val savedMember = memberRepository.save(member)
@@ -64,7 +66,8 @@ class AuthService(
             userNo = savedMember.userNo,
             email = savedMember.email,
             name = savedMember.name,
-            role = savedMember.role
+            role = savedMember.role,
+            onboardingStatus = savedMember.onboardingStatus
         )
     }
 
@@ -78,8 +81,8 @@ class AuthService(
         if (!passwordEncoder.matches(request.password, member.password)) {
             throw InvalidCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.") }
 
-        val token = jwtTokenProvider.createToken(member.userNo, member.role.name)
-        val refreshToken = jwtTokenProvider.createRefreshToken(member.userNo, member.role.name)
+        val token = jwtTokenProvider.createToken(member.userNo, member.role.name, member.onboardingStatus.name)
+        val refreshToken = jwtTokenProvider.createRefreshToken(member.userNo, member.role.name, member.onboardingStatus.name)
 
         val authResponse = AuthResponse(
             accessToken = token,
@@ -87,7 +90,8 @@ class AuthService(
             email = member.email,
             name = member.name,
             phone = member.phone,
-            role = member.role
+            role = member.role,
+            onboardingStatus = member.onboardingStatus
         )
         
         return LoginResult(authResponse, refreshToken)
@@ -105,8 +109,8 @@ class AuthService(
         val member = memberRepository.findByUserNo(userNo)
             ?: throw InvalidCredentialsException("존재하지 않는 회원입니다.")
 
-        val newAccessToken = jwtTokenProvider.createToken(member.userNo, member.role.name)
-        val newRefreshToken = jwtTokenProvider.createRefreshToken(member.userNo, member.role.name)
+        val newAccessToken = jwtTokenProvider.createToken(member.userNo, member.role.name, member.onboardingStatus.name)
+        val newRefreshToken = jwtTokenProvider.createRefreshToken(member.userNo, member.role.name, member.onboardingStatus.name)
 
         val authResponse = AuthResponse(
             accessToken = newAccessToken,
@@ -114,7 +118,8 @@ class AuthService(
             email = member.email,
             name = member.name,
             phone = member.phone,
-            role = member.role
+            role = member.role,
+            onboardingStatus = member.onboardingStatus
         )
 
         return LoginResult(authResponse, newRefreshToken)
@@ -132,13 +137,42 @@ class AuthService(
             email = member.email,
             name = member.name,
             phone = member.phone,
-            role = member.role
+            role = member.role,
+            onboardingStatus = member.onboardingStatus
+        )
+    }
+
+    /**
+     * 호스트 온보딩 완료 처리
+     */
+    @Transactional
+    fun completeOnboarding(userNo: String): AuthResponse {
+        val member = memberRepository.findByUserNo(userNo)
+            ?: throw InvalidCredentialsException("존재하지 않는 회원입니다.")
+
+        if (member.role != MemberRole.HOST) {
+            throw IllegalArgumentException("호스트만 온보딩 수정을 할 수 있습니다.")
+        }
+
+        member.onboardingStatus = OnboardingStatus.COMPLETED
+        val savedMember = memberRepository.save(member)
+
+        // 갱신된 상태로 새 토큰 발급
+        val newToken = jwtTokenProvider.createToken(savedMember.userNo, savedMember.role.name, savedMember.onboardingStatus.name)
+
+        return AuthResponse(
+            accessToken = newToken,
+            userNo = savedMember.userNo,
+            email = savedMember.email,
+            name = savedMember.name,
+            phone = savedMember.phone,
+            role = savedMember.role,
+            onboardingStatus = savedMember.onboardingStatus
         )
     }
 
     /**
      * 비즈니스 키 (user_no) 생성 로직
-     * 예: m20260307-001
      */
     private fun generateUserNo(role: MemberRole): String {
         val prefix = if (role == MemberRole.HOST) "h" else "m"

@@ -5,9 +5,9 @@ spring:
     virtual:
       enabled: true
   datasource:
-    url: jdbc:mysql://localhost:13306/nextstay?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: nextstay_admin
-    password: nextstay_db_pass_2026
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:13306/nextstay?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${SPRING_DATASOURCE_USERNAME:nextstay_admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:nextstay_db_pass_2026}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -17,6 +17,12 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+        default_batch_fetch_size: 100
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
 
 logging:
   level:

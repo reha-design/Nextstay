@@ -144,11 +144,13 @@ class StayService(
             latitude = if (stayNo == "s260307174469") 37.7718 else stay.latitude,
             longitude = if (stayNo == "s260307174469") 128.9482 else stay.longitude,
             rating = String.format("%.1f", (40..50).random() / 10.0).toDouble(),
-            images = listOf(
-                "https://picsum.photos/seed/${stay.stayNo}_1/1200/800",
-                "https://picsum.photos/seed/${stay.stayNo}_2/1200/800",
-                "https://picsum.photos/seed/${stay.stayNo}_3/1200/800"
-            ),
+            images = stay.images.ifEmpty {
+                listOf(
+                    "https://picsum.photos/seed/${stay.stayNo}_1/1200/800",
+                    "https://picsum.photos/seed/${stay.stayNo}_2/1200/800",
+                    "https://picsum.photos/seed/${stay.stayNo}_3/1200/800"
+                )
+            },
             rooms = rooms.map { room ->
                 // 29박(한달살기) 기준 할인가 계산
                 val result = pricingEngine.calculate(room, PriceCalculationRequest(LocalDate.now(), LocalDate.now().plusDays(29)))

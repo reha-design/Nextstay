@@ -2,6 +2,7 @@ package com.mrmention.nextstay.domain.booking.repository
 
 import com.mrmention.nextstay.domain.booking.entity.Booking
 import com.mrmention.nextstay.domain.booking.entity.BookingStatus
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -11,6 +12,7 @@ import java.time.LocalDate
 interface BookingRepository : JpaRepository<Booking, Long> {
     fun findByBookingNo(bookingNo: String): Booking?
     
+    @EntityGraph(attributePaths = ["room", "room.stay", "guest"])
     fun findAllByGuestId(guestId: Long): List<Booking>
 
     /**

@@ -62,7 +62,11 @@ class SecurityConfig(
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOriginPatterns = listOf("http://localhost:3000") // 프론트엔드 주소 허용
+        configuration.allowedOriginPatterns = listOf(
+            "http://localhost:3000", 
+            "https://d384c7rwalwmeb.cloudfront.net",
+            "https://d2jwfd8djegkc5.cloudfront.net"
+        ) // 프론트엔드 주소 허용
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
         configuration.allowedHeaders = listOf("*")
         configuration.allowCredentials = true

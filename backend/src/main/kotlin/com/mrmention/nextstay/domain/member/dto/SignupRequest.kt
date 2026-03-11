@@ -49,4 +49,13 @@ data class SignupRequest(
 ) {
     /** 비밀번호 일치 여부 확인 */
     fun isPasswordMatching() = password == passwordConfirm
+
+    /** 호스트 가입 시 필수 항목 검증 */
+    @AssertTrue(message = "호스트로 가입하려면 이름과 전화번호가 올바르게 입력되어야 합니다.")
+    fun isValidHostRequest(): Boolean {
+        if (role == MemberRole.HOST) {
+            return name.isNotBlank() && phone.isNotBlank()
+        }
+        return true
+    }
 }

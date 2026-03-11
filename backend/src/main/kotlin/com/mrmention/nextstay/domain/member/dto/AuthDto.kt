@@ -1,6 +1,7 @@
 package com.mrmention.nextstay.domain.member.dto
 
 import com.mrmention.nextstay.domain.member.entity.MemberRole
+import com.mrmention.nextstay.domain.member.entity.OnboardingStatus
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 
@@ -26,7 +27,8 @@ data class AuthResponse(
     val email: String,
     val name: String,
     val phone: String?,
-    val role: MemberRole
+    val role: MemberRole,
+    val onboardingStatus: OnboardingStatus
 )
 
 /**
@@ -44,7 +46,8 @@ data class SignupResponse(
     val userNo: String,
     val email: String,
     val name: String,
-    val role: MemberRole
+    val role: MemberRole,
+    val onboardingStatus: OnboardingStatus
 )
 /**
  * 현재 로그인된 사용자 정보 응답 DTO
@@ -54,5 +57,6 @@ data class UserResponse(
     val email: String,
     val name: String,
     val phone: String?,
-    val role: MemberRole
+    val role: MemberRole,
+    val onboardingStatus: OnboardingStatus
 )

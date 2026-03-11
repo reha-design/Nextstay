@@ -19,13 +19,14 @@ class JwtTokenProvider(
 ) {
     private val key: SecretKey = Keys.hmacShaKeyFor(secretKey.toByteArray())
 
-    fun createToken(userNo: String, role: String): String {
+    fun createToken(userNo: String, role: String, onboardingStatus: String): String {
         val now = Date()
         val expiryDate = Date(now.time + expirationTime) // Access token expiration
 
         return Jwts.builder()
             .subject(userNo)
             .claim("role", role)
+            .claim("onboardingStatus", onboardingStatus)
             .issuedAt(now)
             .expiration(expiryDate)
             .signWith(key)
@@ -33,13 +34,14 @@ class JwtTokenProvider(
     }
 
     // 7일 유효기간 리프레시 토큰 (밀리초 변환: 7일 * 24시간 * 60분 * 60초 * 1000)
-    fun createRefreshToken(userNo: String, role: String): String {
+    fun createRefreshToken(userNo: String, role: String, onboardingStatus: String): String {
         val now = Date()
         val refreshExpiryDate = Date(now.time + (1000L * 60 * 60 * 24 * 7)) 
 
         return Jwts.builder()
             .subject(userNo)
             .claim("role", role)
+            .claim("onboardingStatus", onboardingStatus)
             .issuedAt(now)
             .expiration(refreshExpiryDate)
             .signWith(key)
@@ -64,6 +66,16 @@ class JwtTokenProvider(
             .parseSignedClaims(token)
             .payload
         return claims["role"] as String
+    }
+
+    // onboardingStatus 반환
+    fun getOnboardingStatusFromToken(token: String): String {
+        val claims: Claims = Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .payload
+        return claims["onboardingStatus"] as String
     }
 
     fun getAuthentication(token: String): Authentication {

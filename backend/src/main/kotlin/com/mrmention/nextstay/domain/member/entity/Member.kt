@@ -5,6 +5,7 @@ import jakarta.persistence.*
 
 enum class MemberRole { GUEST, HOST, ADMIN }
 enum class SocialProvider { LOCAL, KAKAO, APPLE }
+enum class OnboardingStatus { NONE, PENDING, COMPLETED, APPROVED }
 
 @Entity
 @Table(
@@ -36,6 +37,10 @@ class Member(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val role: MemberRole,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "onboarding_status", nullable = false)
+    var onboardingStatus: OnboardingStatus = OnboardingStatus.NONE,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

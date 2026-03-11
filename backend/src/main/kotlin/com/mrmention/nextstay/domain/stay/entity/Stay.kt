@@ -45,6 +45,11 @@ class Stay(
     @Column
     val longitude: Double? = null,
 
+    @ElementCollection
+    @CollectionTable(name = "stay_images", joinColumns = [JoinColumn(name = "stay_id")])
+    @Column(name = "image_url")
+    val images: List<String> = emptyList(),
+
     @OneToMany(mappedBy = "stay", cascade = [CascadeType.ALL], orphanRemoval = true)
     val rooms: MutableList<Room> = mutableListOf(),
 

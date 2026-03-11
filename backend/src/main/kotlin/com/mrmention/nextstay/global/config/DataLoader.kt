@@ -81,46 +81,11 @@ class DataLoader(
 
         // 2. 숙소 데이터 30개 생성
         val citiesWithImages = listOf(
-            CityInfo("제주", listOf(
-                "https://images.unsplash.com/photo-1590424744257-fdb03ed78ae0",
-                "https://images.unsplash.com/photo-1502444330042-d1a1ddf9bb5b",
-                "https://images.unsplash.com/photo-1543734007-885743a1af6b",
-                "https://images.unsplash.com/photo-1601614949506-6f81e18cd953",
-                "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6",
-                "https://images.unsplash.com/photo-1621244249243-431fd01a91cf"
-            )),
-            CityInfo("서울", listOf(
-                "https://images.unsplash.com/photo-1538481199705-c710c4e965fc",
-                "https://images.unsplash.com/photo-1578130334547-41804e028bbd",
-                "https://images.unsplash.com/photo-1510627581559-07f153a5925a",
-                "https://images.unsplash.com/photo-1591113069116-29175f0a05a8",
-                "https://images.unsplash.com/photo-1505705426101-da47ada33278",
-                "https://images.unsplash.com/photo-1517154421773-0529f29ea451"
-            )),
-            CityInfo("부산", listOf(
-                "https://images.unsplash.com/photo-1548115184-bc6544d06a58",
-                "https://images.unsplash.com/photo-1616712134469-dc3989c645c7",
-                "https://images.unsplash.com/photo-1620353164996-03f6f1c7d77a",
-                "https://images.unsplash.com/photo-1579717614051-7892dfd62c3e",
-                "https://images.unsplash.com/photo-1590664082210-fe390212ef84",
-                "https://images.unsplash.com/photo-1563297607-e9108ed354c0"
-            )),
-            CityInfo("강원", listOf(
-                "https://images.unsplash.com/photo-1520215024434-2e90f23f8599",
-                "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
-                "https://images.unsplash.com/photo-1500382017468-9049fee74a62",
-                "https://images.unsplash.com/photo-1470770841072-f978cf4d019e",
-                "https://images.unsplash.com/photo-1593181629936-11c609b8db9b",
-                "https://images.unsplash.com/photo-1542662565-7e4b66bae529"
-            )),
-            CityInfo("경주", listOf(
-                "https://images.unsplash.com/photo-1505873242700-f289a29e1e0f",
-                "https://images.unsplash.com/photo-1511116410292-0f5f84d339e3",
-                "https://images.unsplash.com/photo-1528127269322-539801943a42",
-                "https://images.unsplash.com/photo-1548114687-247570483424",
-                "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61",
-                "https://images.unsplash.com/photo-1557991953-911854bb978d"
-            ))
+            CityInfo("제주", 33.4890, 126.4983, (1..10).map { "https://picsum.photos/seed/jeju_$it/1200/800" }),
+            CityInfo("서울", 37.5665, 126.9780, (1..10).map { "https://picsum.photos/seed/seoul_$it/1200/800" }),
+            CityInfo("부산", 35.1796, 129.0756, (1..10).map { "https://picsum.photos/seed/busan_$it/1200/800" }),
+            CityInfo("강원", 37.8853, 127.7298, (1..10).map { "https://picsum.photos/seed/gangwon_$it/1200/800" }),
+            CityInfo("경주", 35.8562, 129.2247, (1..10).map { "https://picsum.photos/seed/gyeongju_$it/1200/800" })
         )
 
         val categories = StayCategory.values()
@@ -131,6 +96,10 @@ class DataLoader(
             val category = categories[random.nextInt(categories.size)]
             val stayNo = "s${System.currentTimeMillis() % 10000000}$i"
             
+            // 시청 좌표 기준 근처 분포 (Jitter 적용)
+            val jitterLat = (random.nextDouble() - 0.5) * 0.05
+            val jitterLng = (random.nextDouble() - 0.5) * 0.05
+
             val stay = Stay(
                 stayNo = stayNo,
                 host = host,
@@ -139,8 +108,9 @@ class DataLoader(
                 address = "${cityInfo.name}특별시 ${cityInfo.name}구 ${cityInfo.name}동 ${i}번지",
                 city = cityInfo.name,
                 category = category,
-                latitude = 33.0 + random.nextDouble() * 5.0,
-                longitude = 126.0 + random.nextDouble() * 3.0
+                latitude = cityInfo.lat + jitterLat,
+                longitude = cityInfo.lng + jitterLng,
+                images = cityInfo.images.shuffled().take(6)
             )
             stayRepository.save(stay)
 
@@ -226,5 +196,5 @@ class DataLoader(
         return result
     }
 
-    private data class CityInfo(val name: String, val images: List<String>)
+    private data class CityInfo(val name: String, val lat: Double, val lng: Double, val images: List<String>)
 }

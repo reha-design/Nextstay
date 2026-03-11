@@ -77,7 +77,7 @@ class BookingService(
 
         val saved = bookingRepository.saveAndFlush(booking)
 
-        // 6. 비동기 메시지 발행 (이메일 전송, 통계, 알림 등 백그라운드 워커용)
+        // 6. 비동기 메시지 발행 (이중화를 위해 별도 로직으로 분리 가능하나 현재는 동기 처리)
         val message = mapOf(
             "bookingNo" to saved.bookingNo,
             "userNo" to guest.userNo,
