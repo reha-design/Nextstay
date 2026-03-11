@@ -30,7 +30,12 @@ db.run(`
 `);
 
 const app = new Elysia()
-  .use(cors())
+  .use(cors({
+    origin: true, // Allow all origins for dynamic CloudFront URLs
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }))
   .use(rateLimit({
     duration: 60000,
     max: 30,
