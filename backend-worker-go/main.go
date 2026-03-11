@@ -19,8 +19,12 @@ func failOnError(err error, msg string) {
 
 func main() {
 	// 1. RabbitMQ 연결 설정
-	// docker-compose.yml에 설정된 guest/guest 계정 사용
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	// 환경 변수에서 URL을 읽어오고, 없으면 로컬 호스트 기본값 사용
+	rabbitURL := os.Getenv("RABBITMQ_URL")
+	if rabbitURL == "" {
+		rabbitURL = "amqp://guest:guest@localhost:5672/"
+	}
+	conn, err := amqp.Dial(rabbitURL)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
