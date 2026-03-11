@@ -346,7 +346,6 @@ const calculateBestPrice = async () => {
     const response = await $fetch<PriceCalculationResponse>(
       `/api/v1/rooms/${cheapestRoom.roomNo}/calculate-price`,
       {
-        baseURL: 'http://localhost:8080',
         method: 'POST',
         body: {
           checkInDate: checkInDate.value,
@@ -479,6 +478,7 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+@use "sass:color";
 $primary-color: #7575ff; // 기존 브랜드 블루
 $text-dark: #222222;
 $text-light: #717171;
@@ -615,7 +615,7 @@ $shadow: 0 6px 16px rgba(0,0,0,0.12);
       font-size: 16px;
       cursor: pointer;
       transition: all 0.2s;
-      &:hover { background: darken($primary-color, 10%); transform: scale(1.02); }
+      &:hover { background: color.adjust($primary-color, $lightness: -10%); transform: scale(1.02); }
     }
   }
 }
@@ -711,7 +711,7 @@ $shadow: 0 6px 16px rgba(0,0,0,0.12);
       cursor: pointer; 
       margin-bottom: 8px;
       transition: background 0.2s;
-      &:hover { background: darken($primary-color, 10%); }
+      &:hover { background: color.adjust($primary-color, $lightness: -10%); }
     }
     .price-notice { font-size: 14px; text-align: center; color: $text-light; margin-bottom: 24px; }
 

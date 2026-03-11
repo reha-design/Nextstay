@@ -71,6 +71,10 @@ export interface MainPageStayResponse {
 // Fetch main page accommodations
 const { data: stays, pending, error, refresh } = await useApi<MainPageStayResponse[]>('/api/v1/stays/main')
 
+if (error.value && process.server) {
+  console.error('[index.vue SSR Error]', error.value)
+}
+
 const handleRefresh = () => {
   refresh()
 }

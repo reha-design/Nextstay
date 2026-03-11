@@ -7,7 +7,10 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "sst:dev": "sst dev",
+    "sst:deploy": "sst deploy --stage prod",
+    "sst:remove": "sst remove --stage prod"
   },
   "dependencies": {
     "@elysiajs/eden": "^1.4.8",
@@ -18,7 +21,10 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "aws-cdk-lib": "^2.181.1",
     "bun-types": "^1.3.10",
-    "sass": "^1.97.3"
+    "constructs": "^10.4.2",
+    "sass": "^1.97.3",
+    "sst": "^3.9.18"
   }
 }

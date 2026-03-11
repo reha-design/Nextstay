@@ -15,7 +15,8 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   globalThis.$fetch = originalFetch.create({
     onRequest({ request, options }) {
-      const baseURL = 'http://localhost:8080'
+      const config = useRuntimeConfig()
+      const baseURL = process.client ? '/api/backend-proxy' : (config.public.apiUrl as string)
       // string 이 아닐 경우 (Request 객체 등) url 속성 사용
       let url = typeof request === 'string' ? request : request.url
 
@@ -24,8 +25,8 @@ export default defineNuxtPlugin((nuxtApp) => {
         options.baseURL = baseURL
       }
 
-      // 2. 백엔드(8080)로 향하는 요청에만 보안 옵션 및 토큰 적용
-      const isBackend = url.includes(':8080') || url.startsWith('/api/v1') || options.baseURL?.includes(':8080')
+      // 2. 백엔드(8080 등)로 향하는 요청에만 보안 옵션 및 토큰 적용
+      const isBackend = url.includes(baseURL) || url.startsWith('/api/v1') || options.baseURL === baseURL
       
       if (isBackend) {
         options.credentials = 'include'
@@ -57,7 +58,8 @@ export default defineNuxtPlugin((nuxtApp) => {
 
         try {
           console.log('[Auth Interceptor] 401 발생 (Unauthorized). 토큰 갱신 시도:', url)
-          const baseURL = 'http://localhost:8080'
+          const config = useRuntimeConfig()
+          const baseURL = config.public.apiUrl as string
           
           // 1. Refresh API 호출
           const refreshRes: any = await originalFetch(`${baseURL}/api/v1/auth/refresh`, {

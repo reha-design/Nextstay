@@ -158,7 +158,6 @@ const handleBooking = async () => {
   submintting.value = true
   try {
     await $fetch(`/api/v1/rooms/${roomNo}/bookings`, {
-      baseURL: 'http://localhost:8080',
       method: 'POST',
       headers: {
         Authorization: `Bearer ${authStore.token}`

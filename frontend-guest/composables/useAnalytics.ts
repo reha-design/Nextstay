@@ -4,8 +4,8 @@ import type { App } from '../../backend-analytics/src/index'
 export const useAnalytics = () => {
   const config = useRuntimeConfig()
   
-  // 분석 서버 URL (기본값 설정)
-  const analyticsUrl = (config.public.analyticsUrl as string) || 'http://localhost:4000'
+  // 분석 서버 URL (서버 사이드 프록시 사용)
+  const analyticsUrl = '/api/analytics-proxy'
   
   // Eden Treaty 클라이언트 생성
   const client = edenTreaty<App>(analyticsUrl)

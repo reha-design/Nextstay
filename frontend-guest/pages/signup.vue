@@ -3,6 +3,34 @@
     <div class="auth-card">
       <h2>회원가입</h2>
       <p class="subtitle">넥스트스테이와 함께 새로운 여행을 시작하세요.</p>
+
+      <!-- Role Selector -->
+      <div class="role-selector">
+        <div 
+          class="role-card" 
+          :class="{ active: form.role === 'GUEST' }"
+          @click="form.role = 'GUEST'"
+        >
+          <div class="emoji">🧳</div>
+          <div class="role-info">
+            <span class="role-title">여행자 (GUEST)</span>
+            <span class="role-desc">새로운 여행을 계획하는 게스트</span>
+          </div>
+          <div class="check-mark" v-if="form.role === 'GUEST'">✅</div>
+        </div>
+        <div 
+          class="role-card" 
+          :class="{ active: form.role === 'HOST' }"
+          @click="form.role = 'HOST'"
+        >
+          <div class="emoji">🏠</div>
+          <div class="role-info">
+            <span class="role-title">호스트 (HOST)</span>
+            <span class="role-desc">숙소를 운영하고 관리하는 호스트</span>
+          </div>
+          <div class="check-mark" v-if="form.role === 'HOST'">✅</div>
+        </div>
+      </div>
       
       <form class="auth-form" @submit.prevent="handleSignup">
         <div class="form-group">
@@ -90,7 +118,7 @@ const handleSignup = async () => {
   error.value = ''
   
   try {
-    const data = await $fetch('http://localhost:8080/api/v1/auth/signup', {
+    const data = await $fetch<any>('/api/v1/auth/signup', {
       method: 'POST',
       body: {
         role: form.role,
@@ -106,13 +134,17 @@ const handleSignup = async () => {
     })
 
     if (data) {
-      alert('회원가입이 완료되었습니다! 로그인해 주세요.')
-      
-      const route = useRoute()
-      router.push({
-        path: '/login',
-        query: route.query
-      })
+      if (data.onboardingStatus === 'PENDING') {
+        alert('회원가입이 완료되었습니다! 호스트 온보딩 페이지로 이동합니다.')
+        router.push('/hosts/onboarding')
+      } else {
+        alert('회원가입이 완료되었습니다! 로그인해 주세요.')
+        const route = useRoute()
+        router.push({
+          path: '/login',
+          query: route.query
+        })
+      }
     }
   } catch (err: any) {
     if (err.status === 409) {
@@ -159,8 +191,80 @@ const handleSignup = async () => {
   }
 
   .subtitle {
-    color: #666;
     margin-bottom: 2rem;
+  }
+}
+
+.role-selector {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+}
+
+.role-card {
+  flex: 1;
+  padding: 1.5rem 1rem;
+  border: 2px solid #eee;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  background: #fdfdfd;
+
+  &:hover {
+    transform: translateY(-5px);
+    border-color: #a0c4f8;
+    background: #f8fbff;
+  }
+
+  &.active {
+    border-color: #006ce4;
+    background: #f0f7ff;
+    box-shadow: 0 4px 12px rgba(0, 108, 228, 0.1);
+
+    .role-title {
+      color: #006ce4;
+    }
+  }
+
+  .emoji {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    line-height: 1;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  }
+
+  .role-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .role-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #333;
+  }
+
+  .role-desc {
+    font-size: 0.8rem;
+    color: #777;
+    word-break: keep-all;
+  }
+
+  .check-mark {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 1.2rem;
   }
 }
 

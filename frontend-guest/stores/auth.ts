@@ -28,8 +28,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       // $fetch 는 전역 플러그인에서 설정된 인터셉터를 사용하게 됩니다.
-      const data = await $fetch('/api/v1/users/me', {
-        baseURL: 'http://localhost:8080',
+      const data = await $fetch<any>('/api/v1/users/me', {
         headers: {
           Authorization: `Bearer ${token.value}`
         },
