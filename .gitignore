@@ -1,0 +1,45 @@
+# Nextstay 루트 .gitignore
+
+# 🔐 보안 및 인프라 (절대 커밋 금지)
+*.pem
+nextstay-key.pem
+nextstay-key-fixed.pem
+.sst/
+docker-compose.prod.yml
+setup_mq.sh
+nextstay.conf
+
+# 🛠️ AWS 배포 및 설정 (계정 ID, 리소스 ID 포함)
+*.json
+!package.json
+!tsconfig.json
+!composer.json
+!docker-compose.yml
+!docker-compose.local.yml
+
+# 📝 로그 및 임시 파일
+*.log
+sst-deploy*.log
+node_modules/
+.output/
+.nuxt/
+.data/
+.nitro/
+dist/
+build/
+.gradle/
+*.sqlite*
+
+# 🐍 Python
+__pycache__/
+*.pyc
+
+# 🖥️ IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 🍎 OS
+.DS_Store
+Thumbs.db

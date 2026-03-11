@@ -14,6 +14,7 @@ if script_dir not in sys.path:
 
 import run_front_guest # 초기 임포트
 import run_analytics
+import run_docker
 
 def kill_process_on_port(port):
     """지정한 포트를 사용 중인 프로세스를 찾아 종료합니다."""
@@ -51,29 +52,7 @@ def kill_process_on_port(port):
     except Exception as e:
         print(f"[경고] 프로세스 확인 중 예외 발생: {e}")
 
-def check_and_run_docker(root_dir):
-    """도커 컨테이너가 실행 중인지 확인하고, 실행 중이지 않으면 시작합니다."""
-    print("\n[1/3] 도커 컨테이너 상태를 확인합니다...")
-    try:
-        # 실행 중인 컨테이너 이름 목록을 가져옵니다.
-        result = subprocess.check_output("docker ps --format \"{{.Names}}\"", shell=True, text=True)
-        running_containers = [c.strip() for c in result.strip().split('\n') if c.strip()]
-        
-        required_containers = ["nextstay-mysql", "nextstay-rabbitmq"]
-        missing = [c for c in required_containers if c not in running_containers]
-        
-        if not missing:
-            print("[확인] 모든 필수 컨테이너(MySQL, RabbitMQ)가 이미 가동 중입니다.")
-        else:
-            print(f"[알림] 실행 중이지 않은 컨테이너 발견: {', '.join(missing)}")
-            print("       >> docker-compose up -d 실행 중...")
-            subprocess.run("docker-compose up -d", shell=True, cwd=root_dir, capture_output=True)
-            print("[완료] 컨테이너가 성공적으로 시작되었습니다.")
-            time.sleep(2)
-    except Exception as e:
-        print(f"[경고] 도커 상태 확인 중 예외 발생: {e}")
-        print("       >> docker-compose up -d 를 강제로 시도합니다...")
-        subprocess.run("docker-compose up -d", shell=True, cwd=root_dir)
+# check_and_run_docker: 도커 컨테이너 상태를 확인하고 필요시 시작 (run_docker.py에서 임포트)
 
 def main():
     # 현재 스크립트 파일(python/run.py)의 부모 경로(Nextstay 프로젝트 루트)를 기준으로 설정
@@ -92,14 +71,14 @@ def main():
         kill_process_on_port(8080)
 
         # 1. 도커 컨테이너 확인 및 실행
-        check_and_run_docker(root_dir)
+        run_docker.check_and_run_docker(root_dir)
 
         # 2. 백엔드 실행
         print("\n[2/3] 백엔드 서버를 시작합니다...")
         subprocess.Popen('start "넥스트스테이-백엔드" cmd /k "gradlew bootRun"', shell=True, cwd=backend_dir)
         
         # 3. 서버 기동 대기
-        print("\n[대기] 백엔드 서버 컴파일 및 톰캣 기동을 기다립니다 (최대 60초)...")
+        print("\n[대기] 백엔드 엔진(JPA/Servlet) 및 가상 스레드 초기화를 기다립니다 (최대 60초)...")
         
         max_retries = 30
         backend_ready = False
@@ -114,7 +93,7 @@ def main():
                 time.sleep(2)
                 
         if backend_ready:
-            print("[성공] 백엔드 서버가 완전히 기동되었습니다!")
+            print("[성공] 백엔드 구성 요소가 모두 로드되었습니다!")
             swagger_url = "http://localhost:8080/swagger-ui/index.html"
             print(f"백엔드 API 문서 창을 새 탭으로 엽니다: {swagger_url}")
             # new=2: 새로운 탭으로 열기 시도

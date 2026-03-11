@@ -1,0 +1,67 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: nextstay-mysql-local
+    ports:
+      - "13306:3306"
+    environment:
+      MYSQL_DATABASE: nextstay
+      MYSQL_USER: nextstay_admin
+      MYSQL_PASSWORD: nextstay_db_pass_2026
+      MYSQL_ROOT_PASSWORD: nextstay_db_pass_2026
+      TZ: Asia/Seoul
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: nextstay-rabbitmq-local
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  backend-api:
+    build: ./backend
+    container_name: nextstay-backend-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/nextstay?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: nextstay_admin
+      SPRING_DATASOURCE_PASSWORD: nextstay_db_pass_2026
+      SPRING_RABBITMQ_HOST: rabbitmq
+    depends_on:
+      - db
+      - rabbitmq
+
+  backend-analytics:
+    build: ./backend-analytics
+    container_name: nextstay-backend-analytics
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend-analytics:/app
+      - /app/node_modules
+
+  backend-worker-go:
+    build: ./backend-worker-go
+    container_name: nextstay-backend-worker-go
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - rabbitmq
+
+  frontend-guest:
+    build: ./frontend-guest
+    container_name: nextstay-frontend-guest
+    ports:
+      - "3000:3000"
+    environment:
+      NUXT_PUBLIC_ANALYTICS_URL: http://localhost:4000
+    depends_on:
+      - backend-api
