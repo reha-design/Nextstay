@@ -11,9 +11,11 @@ import jakarta.validation.constraints.NotBlank
 data class LoginRequest(
     @field:NotBlank(message = "이메일은 필수 입력 항목입니다.")
     @field:Email(message = "올바른 이메일 형식이 아닙니다.")
+    @field:jakarta.validation.constraints.Size(max = 255)
     val email: String,
 
     @field:NotBlank(message = "비밀번호는 필수 입력 항목입니다.")
+    @field:jakarta.validation.constraints.Size(max = 72)
     val password: String
 )
 

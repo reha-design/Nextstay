@@ -35,22 +35,22 @@
       <form class="auth-form" @submit.prevent="handleSignup">
         <div class="form-group">
           <label for="name">이름</label>
-          <input type="text" id="name" v-model="form.name" placeholder="홍길동" required />
+          <input type="text" id="name" v-model="form.name" placeholder="이름" required maxlength="100" />
         </div>
 
         <div class="form-group">
           <label for="email">이메일</label>
-          <input type="email" id="email" v-model="form.email" placeholder="이메일 주소를 입력하세요" required />
+          <input type="email" id="email" v-model="form.email" placeholder="이메일 주소를 입력하세요" required maxlength="255" />
         </div>
         
         <div class="form-group">
           <label for="password">비밀번호</label>
-          <input type="password" id="password" v-model="form.password" placeholder="비밀번호(8자리 이상)" required minlength="8" />
+          <input type="password" id="password" v-model="form.password" placeholder="비밀번호(8자리 이상)" required minlength="8" maxlength="72" />
         </div>
 
         <div class="form-group">
           <label for="passwordConfirm">비밀번호 확인</label>
-          <input type="password" id="passwordConfirm" v-model="form.passwordConfirm" placeholder="비밀번호를 다시 입력하세요" required />
+          <input type="password" id="passwordConfirm" v-model="form.passwordConfirm" placeholder="비밀번호를 다시 입력하세요" required maxlength="72" />
         </div>
 
         <div class="form-group">

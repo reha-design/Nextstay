@@ -11,8 +11,8 @@ Kotlin(Spring Boot), Nuxt 3(SST), Bun(Elysia.js) 등 모던 기술 스택을 활
 
 본 프로젝트는 AI 에이전트와 페어 프로그래밍을 통해 **기존 1인 개발 속도 대비 3~4배의 생산성**을 구현했습니다. 아키텍처 가이드라인을 제시하고 생성된 코드의 성능 결함(N+1, Blocking I/O 등)을 실시간으로 식별하여 최적화하는 방식으로 완성도를 높였습니다.
 
-- 🔗 **[Phase 0~9 종합 작업 보고서](docs/reports/final_comprehensive_report_phase0_9.md)** 👈 **프로젝트 최종 요약**
-- 🔗 **[트러블슈팅 및 아키텍처 결정 로그 전문](docs/troubleshooting/strategic_decisions.md)** 👈 **면접 핵심 포인트**
+- 🔗 **[Phase 0~9 종합 작업 보고서](docs/reports/final_comprehensive_report_phase0_9.md)** 
+- 🔗 **[트러블슈팅 및 아키텍처 결정 로그 전문](docs/troubleshooting/strategic_decisions.md)** 
 
 ---
 

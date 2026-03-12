@@ -16,24 +16,31 @@ data class SignupRequest(
     val role: MemberRole = MemberRole.GUEST,
 
     @field:NotBlank(message = "이름은 필수 입력 항목입니다.")
+    @field:jakarta.validation.constraints.Size(min = 2, max = 100, message = "이름은 2자에서 100자 사이여야 합니다.")
+    @field:Pattern(regexp = "^[가-힣a-zA-Z0-9\\s]+$", message = "이름에는 특수문자를 사용할 수 없습니다.")
     val name: String,
 
     @field:NotBlank(message = "이메일은 필수 입력 항목입니다.")
     @field:Email(message = "올바른 이메일 형식이 아닙니다.")
+    @field:jakarta.validation.constraints.Size(max = 255, message = "이메일은 최대 255자까지 입력 가능합니다.")
     val email: String,
 
     @field:NotBlank(message = "비밀번호는 필수 입력 항목입니다.")
     @field:Pattern(
-        regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@\$!%*#?&])[A-Za-z\\d@\$!%*#?&]{8,}$",
-        message = "비밀번호는 8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다."
+        regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,72}$",
+        message = "비밀번호는 8자 이상 72자 이하, 영문, 숫자, 특수문자를 포함해야 합니다."
     )
+    @field:jakarta.validation.constraints.Size(max = 72, message = "비밀번호는 최대 72자까지 입력 가능합니다.")
     val password: String,
 
     /** 비밀번호 확인 */
     @field:NotBlank(message = "비밀번호 확인은 필수 입력 항목입니다.")
+    @field:jakarta.validation.constraints.Size(max = 72)
     val passwordConfirm: String,
 
     @field:NotBlank(message = "전화번호는 필수 입력 항목입니다.")
+    @field:jakarta.validation.constraints.Size(max = 20, message = "전화번호 형식이 올바르지 않습니다.")
+    @field:Pattern(regexp = "^[0-9\\-]+$", message = "전화번호는 숫자와 하이픈만 허용됩니다.")
     val phone: String,
 
     /** 전체 약관 동의 여부 */
