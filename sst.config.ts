@@ -29,6 +29,7 @@ export default $config({
     // 비용 최적화를 위해 API Gateway 대신 Function URL 사용
     const guestSSR = new sst.aws.Nuxt("GuestSSR", {
       path: "frontend-guest",
+      runtime: "nodejs22.x",
       environment: {
         NUXT_PUBLIC_API_URL: "http://ec2-3-35-10-21.ap-northeast-2.compute.amazonaws.com",
         NUXT_PUBLIC_ANALYTICS_URL: "http://ec2-3-35-10-21.ap-northeast-2.compute.amazonaws.com",
