@@ -114,6 +114,13 @@ const handleSignup = async () => {
     return
   }
 
+  // 전화번호 숫자만 추출하여 10~11자리인지 확인
+  const phoneDigits = form.phone.replace(/[^0-9]/g, '')
+  if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+    error.value = '전화번호는 10~11자리의 숫자여야 합니다.'
+    return
+  }
+
   loading.value = true
   error.value = ''
   
