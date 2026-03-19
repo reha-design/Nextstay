@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { Database } from "bun:sqlite";
 import { cors } from "@elysiajs/cors";
 import { rateLimit } from "elysia-rate-limit";
+import { startGrpcServer } from "./grpcServer";
 
 // 🗄️ SQLite 데이터베이스 초기화 및 WAL 모드 설정
 const db = new Database("analytics.sqlite", { create: true });
@@ -125,4 +126,5 @@ if (import.meta.main) {
     console.log(
       `🦊 Backend-analytics (SQLite WAL) is running at ${app.server?.hostname}:${app.server?.port}`
     );
+    startGrpcServer(50051);
 }

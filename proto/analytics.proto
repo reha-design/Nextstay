@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package com.mrmention.nextstay.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.mrmention.nextstay.grpc";
+option java_outer_classname = "AnalyticsProto";
+
+service AnalyticsService {
+  // 이벤트 로그 전송
+  rpc LogEvent (EventRequest) returns (AnalyticsResponse);
+  
+  // 방문 로그 전송
+  rpc LogVisit (VisitRequest) returns (AnalyticsResponse);
+}
+
+message EventRequest {
+  string event_name = 1;
+  string payload_json = 2; // JSON string for flexible payload
+  int64 timestamp = 3;
+}
+
+message VisitRequest {
+  string path = 1;
+  string user_id = 2;
+  string user_agent = 3;
+}
+
+message AnalyticsResponse {
+  bool success = 1;
+  string message = 2;
+}
