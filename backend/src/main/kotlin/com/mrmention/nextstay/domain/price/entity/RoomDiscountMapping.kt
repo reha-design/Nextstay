@@ -3,12 +3,14 @@ package com.mrmention.nextstay.domain.price.entity
 import com.mrmention.nextstay.domain.room.entity.Room
 import com.mrmention.nextstay.global.entity.BaseEntity
 import jakarta.persistence.*
+import java.util.UUID
 
 @Entity
 @Table(name = "room_discount_mappings")
 class RoomDiscountMapping(
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Id
+    @Column(columnDefinition = "BINARY(16)")
+    val id: UUID,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id", nullable = false)

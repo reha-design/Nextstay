@@ -2,7 +2,6 @@ package com.mrmention.nextstay.domain.member.controller
 
 import com.mrmention.nextstay.domain.member.dto.AuthResponse
 import com.mrmention.nextstay.domain.member.dto.LoginRequest
-import com.mrmention.nextstay.domain.member.dto.LoginResult
 import com.mrmention.nextstay.domain.member.dto.SignupResponse
 import com.mrmention.nextstay.domain.member.dto.SignupRequest
 import com.mrmention.nextstay.domain.member.service.AuthService
@@ -44,7 +43,7 @@ class AuthController(
         response: HttpServletResponse
     ): ResponseEntity<AuthResponse> {
         val result = authService.login(request)
-        
+
         // Refresh Token을 HttpOnly 쿠키로 설정
         val refreshCookie = ResponseCookie.from("refresh_token", result.refreshToken)
             .httpOnly(true)
@@ -53,7 +52,7 @@ class AuthController(
             .maxAge(7 * 24 * 60 * 60)
             .sameSite("Lax")
             .build()
-            
+
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString())
 
         return ResponseEntity.ok(result.authResponse)
@@ -68,10 +67,10 @@ class AuthController(
         if (refreshToken.isNullOrBlank()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         }
-        
+
         // Refresh Service 로직 호출
         val result = authService.refresh(refreshToken)
-        
+
         // 새로운 Refresh Token도 발급되었다면 쿠키 갱신(RTR 패턴)
         val refreshCookie = ResponseCookie.from("refresh_token", result.refreshToken)
             .httpOnly(true)
@@ -80,7 +79,7 @@ class AuthController(
             .maxAge(7 * 24 * 60 * 60)
             .sameSite("Lax")
             .build()
-            
+
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString())
 
         return ResponseEntity.ok(result.authResponse)

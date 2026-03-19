@@ -47,3 +47,8 @@ management:
   endpoint:
     health:
       show-details: always
+
+grpc:
+  analytics:
+    host: ${GRPC_ANALYTICS_HOST:localhost}
+    port: ${GRPC_ANALYTICS_PORT:50051}

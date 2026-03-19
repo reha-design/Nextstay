@@ -39,8 +39,10 @@ data class SignupRequest(
     val passwordConfirm: String,
 
     @field:NotBlank(message = "전화번호는 필수 입력 항목입니다.")
-    @field:jakarta.validation.constraints.Size(max = 20, message = "전화번호 형식이 올바르지 않습니다.")
-    @field:Pattern(regexp = "^[0-9\\-]+$", message = "전화번호는 숫자와 하이픈만 허용됩니다.")
+    @field:Pattern(
+        regexp = "^(01[016789]-?\\d{3,4}-?\\d{4}|02-?\\d{3,4}-?\\d{4}|0[3-6][1-5]-?\\d{3,4}-?\\d{4})$",
+        message = "올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)"
+    )
     val phone: String,
 
     /** 전체 약관 동의 여부 */

@@ -36,7 +36,7 @@ class JwtTokenProvider(
     // 7일 유효기간 리프레시 토큰 (밀리초 변환: 7일 * 24시간 * 60분 * 60초 * 1000)
     fun createRefreshToken(userNo: String, role: String, onboardingStatus: String): String {
         val now = Date()
-        val refreshExpiryDate = Date(now.time + (1000L * 60 * 60 * 24 * 7)) 
+        val refreshExpiryDate = Date(now.time + (1000L * 60 * 60 * 24 * 7))
 
         return Jwts.builder()
             .subject(userNo)
@@ -57,7 +57,7 @@ class JwtTokenProvider(
             .payload
         return claims.subject
     }
-    
+
     // Role 반환
     fun getRoleFromToken(token: String): String {
         val claims: Claims = Jwts.parser()
@@ -88,17 +88,15 @@ class JwtTokenProvider(
         val userNo = claims.subject
         val role = claims["role"] as String
         val authorities = listOf(SimpleGrantedAuthority("ROLE_$role"))
-        
+
         val principal = User(userNo, "", authorities)
         return UsernamePasswordAuthenticationToken(principal, token, authorities)
     }
 
-    fun validateToken(token: String): Boolean {
-        return try {
-            Jwts.parser().verifyWith(key).build().parseSignedClaims(token)
-            true
-        } catch (e: Exception) {
-            false
-        }
+    fun validateToken(token: String): Boolean = try {
+        Jwts.parser().verifyWith(key).build().parseSignedClaims(token)
+        true
+    } catch (e: Exception) {
+        false
     }
 }

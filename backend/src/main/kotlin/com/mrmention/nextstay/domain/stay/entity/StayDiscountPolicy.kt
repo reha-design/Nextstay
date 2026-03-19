@@ -2,12 +2,14 @@ package com.mrmention.nextstay.domain.stay.entity
 
 import com.mrmention.nextstay.global.entity.BaseEntity
 import jakarta.persistence.*
+import java.util.UUID
 
 @Entity
 @Table(name = "stay_discount_policies")
 class StayDiscountPolicy(
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Id
+    @Column(columnDefinition = "BINARY(16)")
+    val id: UUID,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stay_id", nullable = false)

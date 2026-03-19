@@ -4,14 +4,16 @@ import com.mrmention.nextstay.global.entity.BaseEntity
 import jakarta.persistence.*
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.UUID
 
 enum class DiscountPolicyType { LONG_STAY, EARLY_BIRD, FLASH_SALE, FIX_AMOUNT }
 
 @Entity
 @Table(name = "discount_policies")
 class DiscountPolicy(
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Id
+    @Column(columnDefinition = "BINARY(16)")
+    val id: UUID,
 
     @Column(name = "policy_name", nullable = false, length = 100)
     val policyName: String,

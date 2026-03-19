@@ -1,5 +1,7 @@
 package com.mrmention.nextstay.global.security
 
+import com.mrmention.nextstay.global.grpc.VisitLoggingFilter
+
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -15,7 +17,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(
-    private val jwtTokenProvider: JwtTokenProvider
+    private val jwtTokenProvider: JwtTokenProvider,
+    private val visitLoggingFilter: VisitLoggingFilter
 ) {
 
     @Bean
@@ -41,15 +44,18 @@ class SecurityConfig(
                     "/api/v1/accommodations/**",
                     "/api/v1/stays/**"
                 ).permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/stays").hasRole("HOST")
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/rooms").hasRole("HOST")
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/rooms/*/bookings").hasRole("GUEST")
-                .anyRequest().authenticated()
+                    .requestMatchers("/api/v1/host/applications/**").authenticated() // 신청은 누구나(로그인된 세션) 가능
+                    .requestMatchers("/admin/v1/**").hasRole("ADMIN") // 관리자 전용
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/stays").hasRole("HOST")
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/rooms").hasRole("HOST")
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/rooms/*/bookings").hasRole("GUEST")
+                    .anyRequest().authenticated()
             }
             .addFilterBefore(ApiCacheControlFilter(), UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(DevAuthenticationFilter(), UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter::class.java)
-        
+            .addFilterAfter(visitLoggingFilter, JwtAuthenticationFilter::class.java)
+
         // H2 콘솔 및 캐시 헤더 설정
         http.headers { headers ->
             headers.frameOptions { it.sameOrigin() }
@@ -63,7 +69,7 @@ class SecurityConfig(
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
         configuration.allowedOriginPatterns = listOf(
-            "http://localhost:3000", 
+            "http://localhost:3000",
             "https://d384c7rwalwmeb.cloudfront.net",
             "https://d2jwfd8djegkc5.cloudfront.net"
         ) // 프론트엔드 주소 허용

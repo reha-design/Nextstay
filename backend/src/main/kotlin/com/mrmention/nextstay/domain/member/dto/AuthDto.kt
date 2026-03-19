@@ -41,6 +41,7 @@ data class LoginResult(
     val authResponse: AuthResponse,
     val refreshToken: String
 )
+
 /**
  * 회원가입 결과 응답 DTO (자동 로그인 미사용 시)
  */
@@ -51,6 +52,7 @@ data class SignupResponse(
     val role: MemberRole,
     val onboardingStatus: OnboardingStatus
 )
+
 /**
  * 현재 로그인된 사용자 정보 응답 DTO
  */

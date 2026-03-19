@@ -1,5 +1,7 @@
 package com.mrmention.nextstay.domain.price.service
 
+import java.util.UUID
+
 import com.mrmention.nextstay.domain.price.dto.PriceCalculationRequest
 import com.mrmention.nextstay.domain.price.dto.PriceCalculationResponse
 import com.mrmention.nextstay.domain.room.repository.RoomRepository
@@ -15,7 +17,7 @@ class PriceService(
     private val pricingEngine: PricingEngine
 ) {
 
-    fun calculatePrice(roomNo: String, request: PriceCalculationRequest): PriceCalculationResponse {
+    fun calculatePrice(roomNo: UUID, request: PriceCalculationRequest): PriceCalculationResponse {
         val room = roomRepository.findByRoomNo(roomNo)
             ?: throw BusinessException(HttpStatus.NOT_FOUND, "객실 정보를 찾을 수 없습니다.")
 

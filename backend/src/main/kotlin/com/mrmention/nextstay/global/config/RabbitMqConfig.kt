@@ -29,17 +29,13 @@ class RabbitMqConfig {
     fun reservationExchange() = DirectExchange(RESERVATION_EXCHANGE)
 
     @Bean
-    fun reservationQueue(): Queue {
-        return org.springframework.amqp.core.QueueBuilder.durable(RESERVATION_QUEUE)
-            .withArgument("x-dead-letter-exchange", RESERVATION_DLX)
-            .withArgument("x-dead-letter-routing-key", RESERVATION_DLQ_ROUTING_KEY)
-            .build()
-    }
+    fun reservationQueue(): Queue = org.springframework.amqp.core.QueueBuilder.durable(RESERVATION_QUEUE)
+        .withArgument("x-dead-letter-exchange", RESERVATION_DLX)
+        .withArgument("x-dead-letter-routing-key", RESERVATION_DLQ_ROUTING_KEY)
+        .build()
 
     @Bean
-    fun reservationBinding(reservationQueue: Queue, reservationExchange: DirectExchange): Binding {
-        return BindingBuilder.bind(reservationQueue).to(reservationExchange).with(RESERVATION_ROUTING_KEY)
-    }
+    fun reservationBinding(reservationQueue: Queue, reservationExchange: DirectExchange): Binding = BindingBuilder.bind(reservationQueue).to(reservationExchange).with(RESERVATION_ROUTING_KEY)
 
     // DLQ 관련 Bean 설정
     @Bean
@@ -49,16 +45,12 @@ class RabbitMqConfig {
     fun reservationDeadLetterQueue() = Queue(RESERVATION_DLQ)
 
     @Bean
-    fun reservationDeadLetterBinding(): Binding {
-        return BindingBuilder.bind(reservationDeadLetterQueue())
-            .to(reservationDeadLetterExchange())
-            .with(RESERVATION_DLQ_ROUTING_KEY)
-    }
+    fun reservationDeadLetterBinding(): Binding = BindingBuilder.bind(reservationDeadLetterQueue())
+        .to(reservationDeadLetterExchange())
+        .with(RESERVATION_DLQ_ROUTING_KEY)
 
     @Bean
-    fun messageConverter(): MessageConverter {
-        return Jackson2JsonMessageConverter()
-    }
+    fun messageConverter(): MessageConverter = Jackson2JsonMessageConverter()
 
     @Bean
     fun rabbitTemplate(connectionFactory: ConnectionFactory, messageConverter: MessageConverter): RabbitTemplate {

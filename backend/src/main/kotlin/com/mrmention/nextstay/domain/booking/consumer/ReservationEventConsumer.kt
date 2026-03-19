@@ -14,20 +14,20 @@ class ReservationEventConsumer {
         val bookingNo = message["bookingNo"]
         val userNo = message["userNo"]
         val roomNo = message["roomNo"]
-        
+
         log.info(">>> [비동기 예약 이벤트 수신] 예약번호: $bookingNo, 고객번호: $userNo, 객실번호: $roomNo")
-        
+
         try {
             // 1. 외부 알림 시스템 연동 시뮬레이션
             sendNotification(bookingNo.toString(), userNo.toString())
-            
+
             // 2. 예약 데이터 최종 검증 및 상태 업데이트 (시뮬레이션)
             processBooking(bookingNo.toString())
-            
+
             log.info("<<< [비동기 예약 처리 성공] 예약번호: $bookingNo")
         } catch (e: Exception) {
             log.error("!!! [비동기 예약 처리 실패] 예약번호: $bookingNo - DLQ로 이동 가능", e)
-            throw e 
+            throw e
         }
     }
 

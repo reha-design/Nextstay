@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class NextstayApplication
 
 fun main(args: Array<String>) {
-	runApplication<NextstayApplication>(*args)
+    runApplication<NextstayApplication>(*args)
 }

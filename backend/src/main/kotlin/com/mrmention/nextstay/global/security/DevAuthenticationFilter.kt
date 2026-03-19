@@ -20,14 +20,14 @@ class DevAuthenticationFilter : OncePerRequestFilter() {
         filterChain: FilterChain
     ) {
         val testUserNo = request.getHeader("test-user-id")
-        
+
         if (!testUserNo.isNullOrBlank()) {
             val authorities = listOf(SimpleGrantedAuthority("ROLE_GUEST")) // 기본적으로 GUEST 권한 부여
             val principal = User(testUserNo, "", authorities)
             val authentication = UsernamePasswordAuthenticationToken(principal, null, authorities)
             SecurityContextHolder.getContext().authentication = authentication
         }
-        
+
         filterChain.doFilter(request, response)
     }
 }

@@ -14,12 +14,8 @@ class StaySummaryController(
 ) {
 
     @GetMapping
-    fun getAllSummaries(): List<Stay> {
-        return staySummaryRepository.findAll()
-    }
+    fun getAllSummaries(): List<Stay> = staySummaryRepository.findAll()
 
     @GetMapping("/search")
-    fun getSummariesByCity(@RequestParam city: String): List<Stay> {
-        return staySummaryRepository.findByCity(city)
-    }
+    fun getSummariesByCity(@RequestParam city: String): List<Stay> = staySummaryRepository.findByCity(city)
 }

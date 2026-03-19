@@ -5,6 +5,8 @@ plugins {
 	id 'org.jetbrains.kotlin.plugin.allopen' version '2.3.0'
 	id 'org.springframework.boot' version '3.5.0'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'com.google.protobuf' version '0.9.4'
+	id 'com.diffplug.spotless' version '6.25.0'
 }
 
 group = 'com.mrmention'
@@ -42,6 +44,48 @@ dependencies {
 
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
 
+	// gRPC
+	implementation 'io.grpc:grpc-netty-shaded:1.68.0'
+	implementation 'io.grpc:grpc-protobuf:1.68.0'
+	implementation 'io.grpc:grpc-stub:1.68.0'
+	implementation 'io.grpc:grpc-kotlin-stub:1.4.1'
+	implementation 'com.google.protobuf:protobuf-kotlin:3.25.1'
+	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1'
+	implementation 'com.fasterxml.uuid:java-uuid-generator:5.1.0'
+	compileOnly 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+}
+
+sourceSets {
+	main {
+		proto {
+			srcDir '../proto'
+		}
+	}
+}
+
+protobuf {
+	protoc {
+		artifact = "com.google.protobuf:protoc:3.25.1"
+	}
+	plugins {
+		grpc {
+			artifact = 'io.grpc:protoc-gen-grpc-java:1.68.0'
+		}
+		grpckt {
+			artifact = 'io.grpc:protoc-gen-grpc-kotlin:1.4.1:jdk8@jar'
+		}
+	}
+	generateProtoTasks {
+		all().each { task ->
+			task.plugins {
+				grpc {}
+				grpckt {}
+			}
+			task.builtins {
+				kotlin {}
+			}
+		}
+	}
 }
 
 kotlin {
@@ -58,4 +102,31 @@ allOpen {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+spotless {
+	kotlin {
+		target "**/*.kt"
+		ktlint("1.4.1").editorConfigOverride([
+			"ktlint_standard_max-line-length": "disabled",
+			"ktlint_standard_no-wildcard-imports": "disabled",
+			"ktlint_standard_value-parameter-comment": "disabled",
+			"ktlint_standard_import-ordering": "disabled",
+			"ktlint_standard_function-naming": "disabled",
+			"ktlint_standard_property-naming": "disabled",
+			"ktlint_standard_class-naming": "disabled",
+			"ktlint_standard_no-multi-spaces": "disabled",
+			"ktlint_standard_no-blank-line-before-rbrace": "disabled",
+			"ktlint_standard_no-consecutive-blank-lines": "disabled",
+			"ktlint_standard_discouraged-comment-location": "disabled",
+			"ktlint_standard_parameter-list-wrapping": "disabled",
+			"ktlint_standard_argument-list-wrapping": "disabled",
+			"ktlint_standard_comment-spacing": "disabled",
+			"ktlint_standard_trailing-comma-on-call-site": "disabled",
+			"ktlint_standard_trailing-comma-on-declaration-site": "disabled",
+			"ktlint_standard_filename": "disabled"
+		])
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
 }

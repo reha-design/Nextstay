@@ -2,6 +2,7 @@ package com.mrmention.nextstay.domain.member.entity
 
 import com.mrmention.nextstay.global.entity.BaseEntity
 import jakarta.persistence.*
+import java.util.UUID
 
 enum class MemberRole { GUEST, HOST, ADMIN }
 enum class SocialProvider { LOCAL, KAKAO, APPLE }
@@ -16,11 +17,12 @@ enum class OnboardingStatus { NONE, PENDING, COMPLETED, APPROVED }
     ]
 )
 class Member(
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Id
+    @Column(columnDefinition = "BINARY(16)")
+    val id: UUID,
 
-    @Column(name = "user_no", unique = true, nullable = false, length = 20)
-    val userNo: String,
+    @Column(name = "user_no", unique = true, nullable = false, columnDefinition = "BINARY(16)")
+    val userNo: UUID,
 
     @Column(unique = true, nullable = false)
     val email: String,
@@ -36,7 +38,7 @@ class Member(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val role: MemberRole,
+    var role: MemberRole,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "onboarding_status", nullable = false)

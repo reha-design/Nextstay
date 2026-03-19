@@ -11,13 +11,18 @@ import com.mrmention.nextstay.domain.member.entity.MemberRole
 import com.mrmention.nextstay.domain.member.entity.OnboardingStatus
 import com.mrmention.nextstay.global.exception.AlreadyExistsException
 import com.mrmention.nextstay.global.exception.InvalidCredentialsException
+import com.mrmention.nextstay.global.exception.BusinessException
+import org.springframework.http.HttpStatus
 import com.mrmention.nextstay.domain.member.repository.MemberRepository
 import com.mrmention.nextstay.global.security.JwtTokenProvider
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import org.springframework.context.ApplicationEventPublisher
+import com.mrmention.nextstay.domain.member.event.SignupEvent
+import com.mrmention.nextstay.global.util.IdGenerator
+import com.mrmention.nextstay.global.util.TimeProvider
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 
 @Service
@@ -25,8 +30,12 @@ import java.util.concurrent.atomic.AtomicLong
 class AuthService(
     private val memberRepository: MemberRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val jwtTokenProvider: JwtTokenProvider
+    private val jwtTokenProvider: JwtTokenProvider,
+    private val eventPublisher: ApplicationEventPublisher,
+    private val timeProvider: TimeProvider,
+    private val idGenerator: IdGenerator
 ) {
+
     // 임시 시퀀스 (운영 환경에서는 Redis나 DB 시퀀스 사용 권장)
     private val sequence = AtomicLong(1)
 
@@ -43,10 +52,12 @@ class AuthService(
             throw IllegalArgumentException("비밀번호가 일치하지 않습니다.")
         }
 
-        val userNo = generateUserNo(request.role)
+        val memberId = idGenerator.generate()
+        val userNo = idGenerator.generate()
         val encodedPassword = passwordEncoder.encode(request.password)
 
         val member = Member(
+            id = memberId,
             userNo = userNo,
             email = request.email,
             password = encodedPassword,
@@ -61,9 +72,12 @@ class AuthService(
         )
 
         val savedMember = memberRepository.save(member)
-        
+
+        // gRPC 이벤트를 트랜잭션 성공 후 발송하도록 이벤트 발행
+        eventPublisher.publishEvent(SignupEvent(savedMember.userNo.toString(), savedMember.email, savedMember.role.name))
+
         return SignupResponse(
-            userNo = savedMember.userNo,
+            userNo = savedMember.userNo.toString(),
             email = savedMember.email,
             name = savedMember.name,
             role = savedMember.role,
@@ -79,22 +93,26 @@ class AuthService(
             ?: throw InvalidCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.")
 
         if (!passwordEncoder.matches(request.password, member.password)) {
-            throw InvalidCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.") }
+            throw InvalidCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.")
+        }
 
-        val token = jwtTokenProvider.createToken(member.userNo, member.role.name, member.onboardingStatus.name)
-        val refreshToken = jwtTokenProvider.createRefreshToken(member.userNo, member.role.name, member.onboardingStatus.name)
+        val token = jwtTokenProvider.createToken(member.userNo.toString(), member.role.name, member.onboardingStatus.name)
+        val refreshToken = jwtTokenProvider.createRefreshToken(member.userNo.toString(), member.role.name, member.onboardingStatus.name)
 
         val authResponse = AuthResponse(
             accessToken = token,
-            userNo = member.userNo,
+            userNo = member.userNo.toString(),
             email = member.email,
             name = member.name,
             phone = member.phone,
             role = member.role,
             onboardingStatus = member.onboardingStatus
         )
-        
-        return LoginResult(authResponse, refreshToken)
+
+        return LoginResult(
+            authResponse = authResponse,
+            refreshToken = refreshToken
+        )
     }
 
     /**
@@ -106,15 +124,15 @@ class AuthService(
         }
 
         val userNo = jwtTokenProvider.getUserNoFromToken(refreshToken)
-        val member = memberRepository.findByUserNo(userNo)
-            ?: throw InvalidCredentialsException("존재하지 않는 회원입니다.")
+        val member = memberRepository.findByUserNo(UUID.fromString(userNo))
+            ?: throw BusinessException(HttpStatus.UNAUTHORIZED, "회원 정보를 찾을 수 없습니다.")
 
-        val newAccessToken = jwtTokenProvider.createToken(member.userNo, member.role.name, member.onboardingStatus.name)
-        val newRefreshToken = jwtTokenProvider.createRefreshToken(member.userNo, member.role.name, member.onboardingStatus.name)
+        val newAccessToken = jwtTokenProvider.createToken(member.userNo.toString(), member.role.name, member.onboardingStatus.name)
+        val newRefreshToken = jwtTokenProvider.createRefreshToken(member.userNo.toString(), member.role.name, member.onboardingStatus.name)
 
         val authResponse = AuthResponse(
             accessToken = newAccessToken,
-            userNo = member.userNo,
+            userNo = member.userNo.toString(),
             email = member.email,
             name = member.name,
             phone = member.phone,
@@ -122,32 +140,46 @@ class AuthService(
             onboardingStatus = member.onboardingStatus
         )
 
-        return LoginResult(authResponse, newRefreshToken)
+        return LoginResult(
+            authResponse = authResponse,
+            refreshToken = newRefreshToken
+        )
     }
 
     /**
      * 회원 번호로 회원 정보 조회
      */
     fun getMemberByUserNo(userNo: String): UserResponse {
-        val member = memberRepository.findByUserNo(userNo)
+        val member = memberRepository.findByUserNo(UUID.fromString(userNo))
             ?: throw InvalidCredentialsException("존재하지 않는 회원입니다.")
 
-        return UserResponse(
-            userNo = member.userNo,
-            email = member.email,
-            name = member.name,
-            phone = member.phone,
-            role = member.role,
-            onboardingStatus = member.onboardingStatus
-        )
+        return member.toUserResponse()
     }
+
+    /**
+     * 현재 로그인한 회원 정보 조회
+     */
+    fun getCurrentUser(email: String): UserResponse {
+        val member = memberRepository.findByEmail(email)
+            ?: throw BusinessException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다.")
+        return member.toUserResponse()
+    }
+
+    private fun Member.toUserResponse() = UserResponse(
+        userNo = this.userNo.toString(),
+        email = this.email,
+        name = this.name,
+        phone = this.phone,
+        role = this.role,
+        onboardingStatus = this.onboardingStatus
+    )
 
     /**
      * 호스트 온보딩 완료 처리
      */
     @Transactional
     fun completeOnboarding(userNo: String): AuthResponse {
-        val member = memberRepository.findByUserNo(userNo)
+        val member = memberRepository.findByUserNo(UUID.fromString(userNo))
             ?: throw InvalidCredentialsException("존재하지 않는 회원입니다.")
 
         if (member.role != MemberRole.HOST) {
@@ -158,26 +190,16 @@ class AuthService(
         val savedMember = memberRepository.save(member)
 
         // 갱신된 상태로 새 토큰 발급
-        val newToken = jwtTokenProvider.createToken(savedMember.userNo, savedMember.role.name, savedMember.onboardingStatus.name)
+        val newToken = jwtTokenProvider.createToken(savedMember.userNo.toString(), savedMember.role.name, savedMember.onboardingStatus.name)
 
         return AuthResponse(
             accessToken = newToken,
-            userNo = savedMember.userNo,
+            userNo = savedMember.userNo.toString(),
             email = savedMember.email,
             name = savedMember.name,
             phone = savedMember.phone,
             role = savedMember.role,
             onboardingStatus = savedMember.onboardingStatus
         )
-    }
-
-    /**
-     * 비즈니스 키 (user_no) 생성 로직
-     */
-    private fun generateUserNo(role: MemberRole): String {
-        val prefix = if (role == MemberRole.HOST) "h" else "m"
-        val date = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyMMddHHmm"))
-        val random = (10..99).random()
-        return "$prefix$date$random"
     }
 }

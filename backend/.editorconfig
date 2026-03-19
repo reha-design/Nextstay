@@ -1,0 +1,15 @@
+[*.{kt,kts}]
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_max-line-length = disabled
+ktlint_standard_value-parameter-comment = disabled
+ktlint_standard_import-ordering = disabled
+ktlint_standard_function-naming = disabled
+ktlint_standard_property-naming = disabled
+ktlint_standard_class-naming = disabled
+ktlint_standard_no-multi-spaces = disabled
+ktlint_standard_no-blank-line-before-rbrace = disabled
+ktlint_standard_no-consecutive-blank-lines = disabled
+ktlint_standard_discouraged-comment-location = disabled
+ktlint_standard_parameter-list-wrapping = disabled
+ktlint_standard_argument-list-wrapping = disabled
+ktlint_standard_comment-spacing = disabled

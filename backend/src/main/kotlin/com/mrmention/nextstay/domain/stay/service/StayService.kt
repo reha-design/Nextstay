@@ -17,34 +17,37 @@ import com.mrmention.nextstay.domain.price.dto.PriceCalculationRequest
 import com.mrmention.nextstay.domain.price.service.PricingEngine
 import com.mrmention.nextstay.domain.stay.repository.StayRepository
 import com.mrmention.nextstay.global.exception.BusinessException
+import com.mrmention.nextstay.global.util.IdGenerator
+import com.mrmention.nextstay.global.util.TimeProvider
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.atomic.AtomicLong
+import java.util.UUID
 
 @Service
 @Transactional(readOnly = true)
 class StayService(
     private val stayRepository: StayRepository,
     private val memberRepository: MemberRepository,
-    private val roomRepository: RoomRepository,
-    private val pricingEngine: PricingEngine
+    private val roomRepository: RoomRepository, // 여전히 Room 상세 조회가 필요할 수 있으므로 유지
+    private val pricingEngine: PricingEngine,
+    private val timeProvider: TimeProvider,
+    private val idGenerator: IdGenerator
 ) {
-    private val sequence = AtomicLong(1)
 
     /**
      * 숙소 등록
      */
     @Transactional
     fun createStay(request: StayRequest, userNo: String): String {
-        val host = memberRepository.findByUserNo(userNo)
+        val host = memberRepository.findByUserNo(UUID.fromString(userNo))
             ?: throw BusinessException(HttpStatus.NOT_FOUND, "호스트 정보를 찾을 수 없습니다.")
 
-        val stayNo = generateStayNo()
-        
+        val stayId = idGenerator.generate()
+        val stayNo = idGenerator.generate()
+
         val stay = Stay(
+            id = stayId,
             stayNo = stayNo,
             host = host,
             name = request.name,
@@ -55,20 +58,22 @@ class StayService(
             latitude = request.latitude,
             longitude = request.longitude
         )
-        
+
         request.discountPolicies.forEach {
             stay.discountPolicies.add(
                 StayDiscountPolicy(
+                    id = idGenerator.generate(),
                     stay = stay,
                     minNights = it.minNights,
                     discountRate = it.discountRate
                 )
             )
         }
-        
+
         request.seasonPrices.forEach {
             stay.seasonPrices.add(
                 StaySeasonPrice(
+                    id = idGenerator.generate(),
                     stay = stay,
                     seasonName = it.seasonName,
                     startDate = it.startDate,
@@ -79,29 +84,25 @@ class StayService(
         }
 
         val savedStay = stayRepository.save(stay)
-        return savedStay.stayNo
+        return savedStay.stayNo.toString()
     }
 
     /**
      * 숙소 목록 조회 (심플 버전)
      */
-    fun getAllStays(): List<StayResponse> {
-        return stayRepository.findAll().map { it.toResponse() }
-    }
+    fun getAllStays(): List<StayResponse> = stayRepository.findAll().map { it.toResponse() }
 
-    /**
-     * 메인 페이지용 숙소 목록 조회 (썸네일, 최저가 포함)
-     */
     fun getMainPageStays(): List<MainPageStayResponse> {
-        val stays = stayRepository.findAll()
+        val today = timeProvider.today()
+        val stays = stayRepository.findAll() // JOIN FETCH로 이미 rooms가 포함됨
+
         return stays.map { stay ->
-            val rooms = roomRepository.findAllByStayId(stay.id!!)
-            val cheapestRoom = rooms.minByOrNull { it.pricePerNight }
+            val cheapestRoom = stay.rooms.minByOrNull { it.pricePerNight }
             val minPrice = cheapestRoom?.pricePerNight ?: 50000
 
-            val priceTiers = if (cheapestRoom != null) {
+            val priceTiers = cheapestRoom?.let { room ->
                 listOf(6, 14, 29).map { nights ->
-                    val result = pricingEngine.calculate(cheapestRoom, PriceCalculationRequest(LocalDate.now(), LocalDate.now().plusDays(nights.toLong())))
+                    val result = pricingEngine.calculate(room, PriceCalculationRequest(today, today.plusDays(nights.toLong())))
                     PriceTierDto(
                         nights = nights,
                         price = result.pricing.finalTotalPrice,
@@ -109,10 +110,10 @@ class StayService(
                         discountRate = result.pricing.totalDiscountRate
                     )
                 }
-            } else emptyList()
+            } ?: emptyList()
 
             MainPageStayResponse(
-                stayNo = stay.stayNo,
+                stayNo = stay.stayNo.toString(),
                 name = stay.name,
                 address = stay.address,
                 category = stay.category.name,
@@ -124,17 +125,15 @@ class StayService(
         }
     }
 
-    /**
-     * 숙소 상세 정보 조회
-     */
     fun getStayDetail(stayNo: String): StayDetailResponse {
-        val stay = stayRepository.findByStayNo(stayNo)
+        val today = timeProvider.today()
+        val stay = stayRepository.findByStayNo(UUID.fromString(stayNo))
             ?: throw BusinessException(HttpStatus.NOT_FOUND, "숙소 정보를 찾을 수 없습니다.")
-        
-        val rooms = roomRepository.findAllByStayId(stay.id!!)
-        
+
+        // stay.rooms가 이미 JOIN FETCH 됨
+
         return StayDetailResponse(
-            stayNo = stay.stayNo,
+            stayNo = stay.stayNo.toString(),
             name = stay.name,
             description = stay.description,
             address = stay.address,
@@ -151,12 +150,12 @@ class StayService(
                     "https://picsum.photos/seed/${stay.stayNo}_3/1200/800"
                 )
             },
-            rooms = rooms.map { room ->
+            rooms = stay.rooms.map { room ->
                 // 29박(한달살기) 기준 할인가 계산
-                val result = pricingEngine.calculate(room, PriceCalculationRequest(LocalDate.now(), LocalDate.now().plusDays(29)))
-                
+                val result = pricingEngine.calculate(room, PriceCalculationRequest(today, today.plusDays(29)))
+
                 RoomDetailResponse(
-                    roomNo = room.roomNo,
+                    roomNo = room.roomNo.toString(),
                     name = room.name,
                     description = room.description,
                     type = "STANDARD", // 임시 타입
@@ -171,14 +170,8 @@ class StayService(
         )
     }
 
-    private fun generateStayNo(): String {
-        val date = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyMMddHHmm"))
-        val random = (10..99).random()
-        return "s$date$random"
-    }
-
     private fun Stay.toResponse() = StayResponse(
-        stayNo = this.stayNo,
+        stayNo = this.stayNo.toString(),
         name = this.name,
         description = this.description,
         address = this.address,
@@ -187,10 +180,10 @@ class StayService(
         hostName = this.host.name,
         latitude = this.latitude,
         longitude = this.longitude,
-        discountPolicies = this.discountPolicies.map { 
+        discountPolicies = this.discountPolicies.map {
             DiscountPolicyResponse(it.minNights, it.discountRate)
         },
-        seasonPrices = this.seasonPrices.map { 
+        seasonPrices = this.seasonPrices.map {
             SeasonPriceResponse(it.seasonName, it.startDate, it.endDate, it.multiplier)
         }
     )

@@ -16,17 +16,22 @@ class SwaggerConfig {
         val jwtSchemeName = "jwtAuth"
         val securityRequirement = SecurityRequirement().addList(jwtSchemeName)
         val components = Components()
-            .addSecuritySchemes(jwtSchemeName, SecurityScheme()
-                .name(jwtSchemeName)
-                .type(SecurityScheme.Type.HTTP)
-                .scheme("bearer")
-                .bearerFormat("JWT"))
+            .addSecuritySchemes(
+                jwtSchemeName,
+                SecurityScheme()
+                    .name(jwtSchemeName)
+                    .type(SecurityScheme.Type.HTTP)
+                    .scheme("bearer")
+                    .bearerFormat("JWT")
+            )
 
         return OpenAPI()
-            .info(Info()
-                .title("Nextstay API Documentation")
-                .description("Nextstay 미니 숙박 예약 시스템 API 명세서입니다.")
-                .version("v1.0.0"))
+            .info(
+                Info()
+                    .title("Nextstay API Documentation")
+                    .description("Nextstay 미니 숙박 예약 시스템 API 명세서입니다.")
+                    .version("v1.0.0")
+            )
             .addSecurityItem(securityRequirement)
             .components(components)
     }

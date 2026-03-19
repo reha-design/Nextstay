@@ -95,6 +95,27 @@ class MemberSecurityTest {
     }
 
     @Test
+    @DisplayName("너무 짧은 전화번호(10자리 미만)는 차단되어야 한다")
+    fun signupWithShortPhone() {
+        val request = SignupRequest(
+            role = MemberRole.GUEST,
+            name = "홍길동",
+            email = "shortphone@example.com",
+            password = "Password123!",
+            passwordConfirm = "Password123!",
+            phone = "010",
+            termsAgreed = true
+        )
+
+        mockMvc.post("/api/v1/auth/signup") {
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(request)
+        }.andExpect {
+            status { isBadRequest() }
+        }
+    }
+
+    @Test
     @DisplayName("로그인 시에도 이메일 및 비밀번호 길이 제한이 작동해야 한다")
     fun loginWithLongPayload() {
         val longEmail = "A".repeat(256) + "@example.com"

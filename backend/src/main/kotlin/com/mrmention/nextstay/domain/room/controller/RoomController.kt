@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.User
 import org.springframework.web.bind.annotation.*
+import java.util.UUID
 
 @Tag(name = "Room", description = "객실 관리 API")
 @RestController
@@ -31,7 +32,7 @@ class RoomController(
 
     @Operation(summary = "숙소별 객실 목록 조회", description = "특정 숙소에 속한 객실 목록을 조회합니다.")
     @GetMapping("/stay/{stayId}")
-    fun getRoomsByStay(@PathVariable stayId: Long): ResponseEntity<List<RoomResponse>> {
+    fun getRoomsByStay(@PathVariable stayId: UUID): ResponseEntity<List<RoomResponse>> {
         val response = roomService.getRoomsByStay(stayId)
         return ResponseEntity.ok(response)
     }

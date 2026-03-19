@@ -4,17 +4,19 @@ import com.mrmention.nextstay.domain.member.entity.Member
 import com.mrmention.nextstay.domain.room.entity.Room
 import com.mrmention.nextstay.global.entity.BaseEntity
 import jakarta.persistence.*
+import java.util.UUID
 
 enum class StayCategory { HOTEL, PENSION, APARTMENT, GUESTHOUSE }
 
 @Entity
 @Table(name = "stays")
 class Stay(
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Id
+    @Column(columnDefinition = "BINARY(16)")
+    val id: UUID,
 
-    @Column(name = "stay_no", unique = true, nullable = false, length = 20)
-    val stayNo: String,
+    @Column(name = "stay_no", unique = true, nullable = false, columnDefinition = "BINARY(16)")
+    val stayNo: UUID,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id", nullable = false)

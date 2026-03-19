@@ -17,7 +17,7 @@ class GlobalLoggingFilter : OncePerRequestFilter() {
         filterChain: FilterChain
     ) {
         val uri = request.requestURI
-        
+
         // 정적 리소스, Swagger, 헬스체크 관련 로그 제외 (노이즈 제거)
         if (uri.startsWith("/swagger-ui") || uri.startsWith("/v3/api-docs") || uri == "/favicon.ico" || uri.startsWith("/actuator")) {
             filterChain.doFilter(request, response)
@@ -27,7 +27,7 @@ class GlobalLoggingFilter : OncePerRequestFilter() {
         val startTime = System.nanoTime()
         val method = request.method
         val queryString = request.queryString?.let { "?$it" } ?: ""
-        
+
         // [REQ] 형태로 축소
         log.info("--> $method $uri$queryString")
 
@@ -37,13 +37,13 @@ class GlobalLoggingFilter : OncePerRequestFilter() {
             val endTime = System.nanoTime()
             val durationNs = endTime - startTime
             val status = response.status
-            
+
             val timeDisplay = if (durationNs < 1_000_000) {
                 "${durationNs / 1_000}μs"
             } else {
                 "${durationNs / 1_000_000}ms"
             }
-            
+
             // [<-- 200] 형태로 축소
             log.info("<-- $status $method $uri - $timeDisplay")
         }

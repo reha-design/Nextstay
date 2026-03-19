@@ -11,6 +11,7 @@ import com.mrmention.nextstay.domain.stay.repository.StayRepository
 import com.mrmention.nextstay.domain.price.entity.*
 import com.mrmention.nextstay.domain.price.repository.*
 import com.mrmention.nextstay.domain.booking.repository.BookingRepository
+import com.mrmention.nextstay.global.util.IdGenerator
 import org.springframework.boot.CommandLineRunner
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
@@ -29,7 +30,8 @@ class DataLoader(
     private val roomDiscountMappingRepository: RoomDiscountMappingRepository,
     private val bookingRepository: BookingRepository,
     private val pricingCoefficientRepository: PricingCoefficientRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val idGenerator: IdGenerator
 ) : CommandLineRunner {
 
     @Transactional
@@ -58,7 +60,8 @@ class DataLoader(
 
         // 1. 호스트 및 게스트 계정 생성
         val host = Member(
-            userNo = "m2603090001",
+            id = idGenerator.generate(),
+            userNo = idGenerator.generate(),
             email = "host@nextstay.com",
             password = passwordEncoder.encode("password123"),
             name = "안중근",
@@ -69,7 +72,8 @@ class DataLoader(
         memberRepository.save(host)
 
         val guest = Member(
-            userNo = "m2603107777",
+            id = idGenerator.generate(),
+            userNo = idGenerator.generate(),
             email = "testguest@nextstay.com",
             password = passwordEncoder.encode("password123"),
             name = "테스트게스트",
@@ -94,14 +98,14 @@ class DataLoader(
         for (i in 1..30) {
             val cityInfo = citiesWithImages[i % citiesWithImages.size]
             val category = categories[random.nextInt(categories.size)]
-            val stayNo = "s${System.currentTimeMillis() % 10000000}$i"
-            
+
             // 시청 좌표 기준 근처 분포 (Jitter 적용)
             val jitterLat = (random.nextDouble() - 0.5) * 0.05
             val jitterLng = (random.nextDouble() - 0.5) * 0.05
 
             val stay = Stay(
-                stayNo = stayNo,
+                id = idGenerator.generate(),
+                stayNo = idGenerator.generate(),
                 host = host,
                 name = "[${cityInfo.name}/${category.name.lowercase()}] 진정한 휴식과 힐링... 한달살기 숙소 ${i}호점",
                 description = "넥스트스테이가 엄선한 ${cityInfo.name} 지역의 특별한 ${category.name.lowercase()}입니다. 편안한 휴식을 보장합니다.",
@@ -116,6 +120,7 @@ class DataLoader(
 
             // 3. 각 숙소에 종속된 독립적 할인 정책 생성 (플랫폼 권장 계수 활용)
             val p1 = DiscountPolicy(
+                id = idGenerator.generate(),
                 policyName = "단기 거주 할인",
                 policyType = DiscountPolicyType.LONG_STAY,
                 minStayNights = 6,
@@ -124,6 +129,7 @@ class DataLoader(
                 priority = 10
             )
             val p2 = DiscountPolicy(
+                id = idGenerator.generate(),
                 policyName = "중기 거주 할인",
                 policyType = DiscountPolicyType.LONG_STAY,
                 minStayNights = 14,
@@ -132,6 +138,7 @@ class DataLoader(
                 priority = 20
             )
             val p3 = DiscountPolicy(
+                id = idGenerator.generate(),
                 policyName = "한 달 살기 특가",
                 policyType = DiscountPolicyType.LONG_STAY,
                 minStayNights = 29,
@@ -146,9 +153,16 @@ class DataLoader(
             for (j in 1..roomCount) {
                 val roomPrice = (5 + random.nextInt(21)) * 10000
                 val room = Room(
-                    roomNo = "r${stayNo.substring(1)}$j",
+                    id = idGenerator.generate(),
+                    roomNo = idGenerator.generate(),
                     stay = stay,
-                    name = "Room $j - ${if (j==1) "Standard" else if (j==2) "Deluxe" else "Suite"}",
+                    name = "Room $j - ${if (j == 1) {
+                        "Standard"
+                    } else if (j == 2) {
+                        "Deluxe"
+                    } else {
+                        "Suite"
+                    }}",
                     pricePerNight = roomPrice,
                     capacity = 2 + random.nextInt(3),
                     description = "모던한 인테리어와 깨끗한 침구가 준비된 객실입니다."
@@ -156,23 +170,30 @@ class DataLoader(
                 roomRepository.save(room)
 
                 // 해당 객실에 독립된 할인 정책 매핑
-                savedPolicies.forEach { policy ->
-                    roomDiscountMappingRepository.save(RoomDiscountMapping(room = room, discountPolicy = policy))
+                savedPolicies.forEach { policy: DiscountPolicy ->
+                    roomDiscountMappingRepository.save(RoomDiscountMapping(
+                        id = idGenerator.generate(),
+                        room = room,
+                        discountPolicy = policy
+                    ))
                 }
 
                 // 성수기 요금 스케줄 (DB의 할증 계수 활용)
                 val peakMultiplier = coefficients["PEAK_SEASON_SURCHARGE"] ?: BigDecimal("1.5")
                 val weekendMultiplier = coefficients["WEEKEND_SURCHARGE"] ?: BigDecimal("1.8")
 
-                priceScheduleRepository.save(RoomPriceSchedule(
-                    room = room,
-                    startDate = LocalDate.of(2026, 7, 1),
-                    endDate = LocalDate.of(2026, 8, 31),
-                    basePrice = roomPrice,
-                    peakPrice = roomPrice.toBigDecimal().multiply(peakMultiplier).toInt(),
-                    weekendPrice = roomPrice.toBigDecimal().multiply(weekendMultiplier).toInt(),
-                    periodName = "2026 여름 성수기"
-                ))
+                priceScheduleRepository.save(
+                    RoomPriceSchedule(
+                        id = idGenerator.generate(),
+                        room = room,
+                        startDate = LocalDate.of(2026, 7, 1),
+                        endDate = LocalDate.of(2026, 8, 31),
+                        basePrice = roomPrice,
+                        peakPrice = roomPrice.toBigDecimal().multiply(peakMultiplier).toInt(),
+                        weekendPrice = roomPrice.toBigDecimal().multiply(weekendMultiplier).toInt(),
+                        periodName = "2026 여름 성수기"
+                    )
+                )
             }
         }
     }
@@ -189,7 +210,7 @@ class DataLoader(
         val result = mutableMapOf<String, BigDecimal>()
         data.forEach { (key, value) ->
             val coefficient = pricingCoefficientRepository.save(
-                PricingCoefficient(key = key, value = value.first, description = value.second)
+                PricingCoefficient(id = idGenerator.generate(), key = key, value = value.first, description = value.second)
             )
             result[key] = coefficient.value
         }
